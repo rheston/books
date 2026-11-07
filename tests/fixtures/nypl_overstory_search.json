@@ -1,0 +1,424 @@
+{
+ "_note": "Real response from thunder.api.overdrive.com/v2/libraries/nypl/media?query=the overstory powers&perPage=5, captured 2026-11-07, trimmed to the fields libbycheck reads. Availability numbers are a point-in-time snapshot.",
+ "items": [
+  {
+   "id": "3360345",
+   "title": "The Overstory",
+   "subtitle": "A Novel",
+   "firstCreatorName": "Richard Powers",
+   "creators": [
+    {
+     "id": 260455,
+     "name": "Richard Powers",
+     "role": "Author",
+     "sortName": "Powers, Richard",
+     "roleDiscipline": "Text",
+     "intelligenceType": "Unknown"
+    }
+   ],
+   "type": {
+    "id": "ebook",
+    "name": "eBook"
+   },
+   "languages": [
+    {
+     "id": "en",
+     "name": "English"
+    }
+   ],
+   "formats": [
+    {
+     "id": "ebook-kindle",
+     "name": "Kindle Book",
+     "identifiers": [
+      {
+       "type": "ASIN",
+       "value": "B073VX7HT4"
+      }
+     ]
+    },
+    {
+     "id": "ebook-overdrive",
+     "name": "OverDrive Read",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780393635539"
+      }
+     ]
+    },
+    {
+     "id": "ebook-epub-adobe",
+     "name": "EPUB eBook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780393635539"
+      }
+     ]
+    },
+    {
+     "id": "ebook-kobo",
+     "name": "Kobo eBook",
+     "identifiers": [
+      {
+       "type": "KoboBookID",
+       "value": "6d65ca22-38d1-39cb-9465-eb8fd25c725e"
+      }
+     ]
+    }
+   ],
+   "isOwned": true,
+   "isAvailable": false,
+   "isHoldable": true,
+   "ownedCopies": 16,
+   "availableCopies": 0,
+   "holdsCount": 77,
+   "estimatedWaitDays": 69,
+   "luckyDayAvailableCopies": 0,
+   "luckyDayOwnedCopies": 0,
+   "availabilityType": "normal",
+   "isPreReleaseTitle": false
+  },
+  {
+   "id": "3892397",
+   "title": "The Overstory",
+   "firstCreatorName": "Richard Powers",
+   "creators": [
+    {
+     "id": 260455,
+     "name": "Richard Powers",
+     "role": "Author",
+     "sortName": "Powers, Richard",
+     "roleDiscipline": "Text",
+     "intelligenceType": "Unknown"
+    },
+    {
+     "id": 407191,
+     "name": "Suzanne Toren",
+     "role": "Narrator",
+     "sortName": "Toren, Suzanne",
+     "roleDiscipline": "Audio",
+     "intelligenceType": "Unknown"
+    }
+   ],
+   "type": {
+    "id": "audiobook",
+    "name": "Audiobook"
+   },
+   "languages": [
+    {
+     "id": "en",
+     "name": "English"
+    }
+   ],
+   "formats": [
+    {
+     "id": "audiobook-overdrive",
+     "name": "OverDrive Listen audiobook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9781501982026"
+      },
+      {
+       "type": "PublisherCatalogNumber",
+       "value": "5036860"
+      },
+      {
+       "type": "8",
+       "value": "recordedbooks_audio#9781501982026"
+      },
+      {
+       "type": "LibraryISBN",
+       "value": "9781501977657"
+      }
+     ]
+    },
+    {
+     "id": "audiobook-mp3",
+     "name": "MP3 audiobook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9781501982026"
+      },
+      {
+       "type": "PublisherCatalogNumber",
+       "value": "5036860"
+      },
+      {
+       "type": "8",
+       "value": "recordedbooks_audio#9781501982026"
+      },
+      {
+       "type": "LibraryISBN",
+       "value": "9781501977657"
+      }
+     ]
+    }
+   ],
+   "isOwned": true,
+   "isAvailable": false,
+   "isHoldable": true,
+   "ownedCopies": 56,
+   "availableCopies": 0,
+   "holdsCount": 0,
+   "estimatedWaitDays": 1,
+   "luckyDayAvailableCopies": 0,
+   "luckyDayOwnedCopies": 0,
+   "availabilityType": "normal",
+   "isPreReleaseTitle": false
+  },
+  {
+   "id": "6032319",
+   "title": "The Gold Bug Variations",
+   "subtitle": "A Novel",
+   "firstCreatorName": "Richard Powers",
+   "creators": [
+    {
+     "id": 260455,
+     "name": "Richard Powers",
+     "role": "Author",
+     "sortName": "Powers, Richard",
+     "roleDiscipline": "Text",
+     "intelligenceType": "Unknown"
+    }
+   ],
+   "type": {
+    "id": "ebook",
+    "name": "eBook"
+   },
+   "languages": [
+    {
+     "id": "en",
+     "name": "English"
+    }
+   ],
+   "formats": [
+    {
+     "id": "ebook-kindle",
+     "name": "Kindle Book",
+     "identifiers": [
+      {
+       "type": "ASIN",
+       "value": "B08TWYPDNS"
+      }
+     ]
+    },
+    {
+     "id": "ebook-overdrive",
+     "name": "OverDrive Read",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780063119420"
+      }
+     ]
+    },
+    {
+     "id": "ebook-epub-adobe",
+     "name": "EPUB eBook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780063119420"
+      }
+     ]
+    },
+    {
+     "id": "ebook-kobo",
+     "name": "Kobo eBook",
+     "identifiers": [
+      {
+       "type": "KoboBookID",
+       "value": "9c5c0d40-a4a4-31c5-94b7-5da6b0f0cb77"
+      }
+     ]
+    }
+   ],
+   "isOwned": true,
+   "isAvailable": true,
+   "isHoldable": true,
+   "ownedCopies": 1,
+   "availableCopies": 1,
+   "holdsCount": 0,
+   "estimatedWaitDays": 14,
+   "luckyDayAvailableCopies": 0,
+   "luckyDayOwnedCopies": 0,
+   "availabilityType": "normal",
+   "isPreReleaseTitle": false
+  },
+  {
+   "id": "4816695",
+   "title": "The End of the Ocean",
+   "subtitle": "A Novel",
+   "firstCreatorName": "Maja Lunde",
+   "creators": [
+    {
+     "id": 1238814,
+     "name": "Maja Lunde",
+     "role": "Author",
+     "sortName": "Lunde, Maja",
+     "roleDiscipline": "Text",
+     "intelligenceType": "Unknown"
+    },
+    {
+     "id": 130117,
+     "name": "Jane Copland",
+     "role": "Narrator",
+     "sortName": "Copland, Jane",
+     "roleDiscipline": "Audio",
+     "intelligenceType": "Unknown"
+    },
+    {
+     "id": 1085009,
+     "name": "Jean Brassard",
+     "role": "Narrator",
+     "sortName": "Brassard, Jean",
+     "roleDiscipline": "Audio",
+     "intelligenceType": "Unknown"
+    }
+   ],
+   "type": {
+    "id": "audiobook",
+    "name": "Audiobook"
+   },
+   "languages": [
+    {
+     "id": "en",
+     "name": "English"
+    }
+   ],
+   "formats": [
+    {
+     "id": "audiobook-overdrive",
+     "name": "OverDrive Listen audiobook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780062951397"
+      },
+      {
+       "type": "8",
+       "value": "harpercollins_audio#9780062951397"
+      }
+     ]
+    },
+    {
+     "id": "audiobook-mp3",
+     "name": "MP3 audiobook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780062951397"
+      },
+      {
+       "type": "8",
+       "value": "harpercollins_audio#9780062951397"
+      }
+     ]
+    }
+   ],
+   "isOwned": true,
+   "isAvailable": true,
+   "isHoldable": true,
+   "ownedCopies": 1,
+   "availableCopies": 1,
+   "holdsCount": 0,
+   "estimatedWaitDays": 14,
+   "luckyDayAvailableCopies": 0,
+   "luckyDayOwnedCopies": 0,
+   "availabilityType": "normal",
+   "isPreReleaseTitle": false
+  },
+  {
+   "id": "4670371",
+   "title": "The End of the Ocean",
+   "subtitle": "A Novel",
+   "firstCreatorName": "Maja Lunde",
+   "creators": [
+    {
+     "id": 1238814,
+     "name": "Maja Lunde",
+     "role": "Author",
+     "sortName": "Lunde, Maja",
+     "roleDiscipline": "Text",
+     "intelligenceType": "Unknown"
+    },
+    {
+     "id": 1965607,
+     "name": "Diane Oatley",
+     "role": "Translator",
+     "sortName": "Oatley, Diane",
+     "roleDiscipline": "Translation",
+     "intelligenceType": "Unknown"
+    }
+   ],
+   "type": {
+    "id": "ebook",
+    "name": "eBook"
+   },
+   "languages": [
+    {
+     "id": "en",
+     "name": "English"
+    }
+   ],
+   "formats": [
+    {
+     "id": "ebook-kindle",
+     "name": "Kindle Book",
+     "identifiers": [
+      {
+       "type": "ASIN",
+       "value": "B07QLDZHXY"
+      }
+     ]
+    },
+    {
+     "id": "ebook-overdrive",
+     "name": "OverDrive Read",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780062951373"
+      }
+     ]
+    },
+    {
+     "id": "ebook-epub-adobe",
+     "name": "EPUB eBook",
+     "identifiers": [
+      {
+       "type": "ISBN",
+       "value": "9780062951373"
+      }
+     ]
+    },
+    {
+     "id": "ebook-kobo",
+     "name": "Kobo eBook",
+     "identifiers": [
+      {
+       "type": "KoboBookID",
+       "value": "27b6db15-aff7-372c-b18a-2738f7c1c1c4"
+      }
+     ]
+    }
+   ],
+   "isOwned": true,
+   "isAvailable": true,
+   "isHoldable": true,
+   "ownedCopies": 3,
+   "availableCopies": 2,
+   "holdsCount": 0,
+   "estimatedWaitDays": 5,
+   "luckyDayAvailableCopies": 0,
+   "luckyDayOwnedCopies": 0,
+   "availabilityType": "normal",
+   "isPreReleaseTitle": false
+  }
+ ],
+ "totalItems": 12
+}

@@ -1,0 +1,15 @@
+# Personal config: contains your Goodreads RSS key (a secret) and library list
+config.toml
+
+# Caches and generated reports
+.cache/
+output/
+
+# Goodreads exports contain reviews and private notes
+data/
+goodreads_library_export*.csv
+
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/

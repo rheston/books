@@ -1,0 +1,38 @@
+# Copy to config.toml (which is git-ignored) and edit.
+
+[goodreads]
+# Use ONE of rss_url or csv.
+#
+# rss_url: Goodreads -> My Books -> "to-read" shelf -> the RSS link at the bottom
+# of the page. The URL contains a private key, so treat it like a password.
+# Goodreads reportedly caps each feed page at ~100 books; libbycheck requests
+# further pages until no new books appear.
+rss_url = "https://www.goodreads.com/review/list_rss/1234567?key=YOUR_KEY&shelf=to-read"
+
+# csv: Goodreads -> My Books -> Import and export -> Export Library.
+# Not capped, but you have to re-export by hand whenever your shelf changes.
+# csv = "data/goodreads_library_export.csv"
+
+# Shelf to read (the exclusive shelf name, not the display name).
+shelf = "to-read"
+
+[libby]
+# OverDrive library keys, one per library card you want to check.
+# Find a key with:  libbycheck libraries search "king county"
+# (It is also the subdomain of your library's OverDrive site, e.g. nypl.overdrive.com.)
+libraries = ["nypl", "kcls"]
+
+# Which kinds of title to consider.
+types = ["ebook", "audiobook"]
+
+# Only consider catalog entries in these languages (empty list = any language).
+languages = ["en"]
+
+# When a book is available in more than one format, prefer them in this order.
+prefer = ["ebook", "audiobook"]
+
+[run]
+cache_dir = ".cache"
+# Availability is cached briefly so re-running a report is fast; use --refresh to bypass.
+availability_ttl_minutes = 30
+workers = 4

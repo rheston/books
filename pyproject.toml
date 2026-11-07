@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "libbycheck"
+version = "0.1.0"
+description = "Cross-reference a Goodreads to-read shelf with what is available at your Libby (OverDrive) libraries."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []  # standard library only
+
+[project.scripts]
+libbycheck = "libbycheck.cli:main"
+
+[tool.setuptools]
+packages = ["libbycheck"]
