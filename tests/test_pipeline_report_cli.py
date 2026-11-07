@@ -277,6 +277,10 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(config.ConfigError, "unknown section"):
             config.load(self.write("[libbby]\n"))
 
+    def test_both_sources_is_an_error(self):
+        with self.assertRaisesRegex(config.ConfigError, "both rss_url and csv"):
+            config.load(self.write('[goodreads]\nrss_url="https://x"\ncsv="x.csv"\n'))
+
     def test_example_config_is_valid(self):
         s = config.load(Path(__file__).parent.parent / "config.example.toml")
         self.assertTrue(s.rss_url and s.libraries)
@@ -332,6 +336,12 @@ class CliTests(unittest.TestCase):
         self.assertIn("Wait list", out)
         self.assertIn("Lookup failed", out)  # Piranesi: nothing found and library b errored
         self.assertIn("WARNING", err)
+
+    def test_placeholder_rss_url_is_rejected(self):
+        url = "https://www.goodreads.com/review/list_rss/1234567?key=YOUR_KEY&shelf=to-read"
+        code, _, err = self.run_cli(["check", "--rss", url, "-l", "a"], FakeClient())
+        self.assertEqual(code, 2)
+        self.assertIn("placeholder", err)
 
     def test_limit(self):
         client = FakeClient()

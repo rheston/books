@@ -107,6 +107,10 @@ def cmd_check(args, settings) -> int:
     if not (settings.rss_url or settings.csv):
         _err("No Goodreads source. Set [goodreads] rss_url or csv in config.toml, or pass --rss / --csv.")
         return 2
+    if "YOUR_KEY" in settings.rss_url:
+        _err("rss_url is still the placeholder from config.example.toml. Replace it with your own "
+             "Goodreads RSS link, or delete it and set csv instead.")
+        return 2
     if not settings.libraries:
         _err("No libraries. Set [libby] libraries in config.toml, or pass --library KEY.")
         return 2

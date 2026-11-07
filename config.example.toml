@@ -1,7 +1,7 @@
 # Copy to config.toml (which is git-ignored) and edit.
 
 [goodreads]
-# Use ONE of rss_url or csv.
+# Use ONE of rss_url or csv, and delete or comment out the other (setting both is an error).
 #
 # rss_url: Goodreads -> My Books -> "to-read" shelf -> the RSS link at the bottom
 # of the page. The URL contains a private key, so treat it like a password.

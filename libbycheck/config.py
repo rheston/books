@@ -58,4 +58,9 @@ def load(path: str | Path | None) -> Settings:
     s.cache_dir = run.get("cache_dir", s.cache_dir)
     s.availability_ttl_minutes = run.get("availability_ttl_minutes", s.availability_ttl_minutes)
     s.workers = int(run.get("workers", s.workers))
+    if s.rss_url and s.csv:
+        raise ConfigError(
+            f"{path}: [goodreads] has both rss_url and csv. Keep only the one you want "
+            "(delete or comment out the other line)."
+        )
     return s
