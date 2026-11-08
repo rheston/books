@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="libbycheck">
+<title>libbycheck</title>
+<link rel="icon" href="data:,">
+<style>
+/* Layout: one column, reads like a checklist: books, libraries, run, results. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1d2421;
+  --muted: #5b6760;
+  --line: #d9ded9;
+  --accent: #0f6b62;
+  --accent-fg: #ffffff;
+  --ok: #17703a;   --ok-bg: #e2f3e8;
+  --warn: #8a5a00; --warn-bg: #fbefd0;
+  --none: #4d5752; --none-bg: #e8ebe8;
+  --bad: #a3261f;  --bad-bg: #fbe3e1;
+  --radius: 10px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131815; --surface: #1b221e; --fg: #e6ece8; --muted: #9aa8a0; --line: #2f3a34;
+    --accent: #4cc2b4; --accent-fg: #06201c;
+    --ok: #6fd596; --ok-bg: #173824; --warn: #f0c35a; --warn-bg: #3b2f10;
+    --none: #b3beb8; --none-bg: #28312c; --bad: #ff9a92; --bad-bg: #44201d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131815; --surface: #1b221e; --fg: #e6ece8; --muted: #9aa8a0; --line: #2f3a34;
+  --accent: #4cc2b4; --accent-fg: #06201c;
+  --ok: #6fd596; --ok-bg: #173824; --warn: #f0c35a; --warn-bg: #3b2f10;
+  --none: #b3beb8; --none-bg: #28312c; --bad: #ff9a92; --bad-bg: #44201d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 var(--font);
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 1.05rem; margin: 0 0 4px; }
+p { margin: 0; }
+.lede, .hint, .small { color: var(--muted); }
+.small { font-size: 0.875rem; }
+section.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+label { font-weight: 600; font-size: 0.9rem; }
+input[type="text"], input[type="search"], textarea, select {
+  width: 100%; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+textarea { min-height: 96px; resize: vertical; }
+input[type="file"] { width: 100%; font: inherit; color: var(--fg); }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 10px 14px; min-height: 44px; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+button.link { border: 0; background: none; color: var(--accent); padding: 4px 0; min-height: 0; text-decoration: underline; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row > * { min-width: 0; }
+.stack { display: flex; flex-direction: column; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 0.9rem; }
+.chip button { min-height: 28px; padding: 0 8px; border-radius: 999px; }
+.picklist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.picklist li + li { border-top: 1px solid var(--line); }
+.picklist button { width: 100%; text-align: left; border: 0; border-radius: 0; background: var(--surface); }
+.picklist .key { color: var(--muted); font-size: 0.85rem; }
+.msg { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; }
+.msg.error { background: var(--bad-bg); color: var(--bad); }
+.msg.info { background: var(--none-bg); color: var(--fg); }
+details > summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; padding-block: 8px; } /* keep the native disclosure arrow: it is the only hint these expand */
+.opts { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.opts label { font-weight: 400; display: flex; gap: 8px; align-items: center; }
+progress { width: 100%; height: 12px; accent-color: var(--accent); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { border-radius: 999px; min-height: 40px; }
+.filters button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+ol.books { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+li.book { background: var(--surface); border: 1px solid var(--line); border-left-width: 5px; border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+li.book[data-state="available"] { border-left-color: var(--ok); }
+li.book[data-state="wait"], li.book[data-state="unavailable"] { border-left-color: var(--warn); }
+li.book[data-state="none"] { border-left-color: var(--none); }
+li.book[data-state="error"] { border-left-color: var(--bad); }
+.book-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: flex-start; }
+.book-title { font-weight: 650; overflow-wrap: anywhere; }
+.book-author { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.pill { font-size: 0.8rem; font-weight: 650; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.pill[data-state="available"] { background: var(--ok-bg); color: var(--ok); }
+.pill[data-state="wait"], .pill[data-state="unavailable"] { background: var(--warn-bg); color: var(--warn); }
+.pill[data-state="none"] { background: var(--none-bg); color: var(--none); }
+.pill[data-state="error"] { background: var(--bad-bg); color: var(--bad); }
+.meta { font-size: 0.92rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.note { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.9rem; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 0.85rem; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; }
+footer { color: var(--muted); font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: no-preference) { progress { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="stack">
+    <h1>libbycheck</h1>
+    <p class="lede">See which books on your Goodreads to-read shelf you can borrow right now from your Libby libraries.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-books">
+    <div>
+      <h2 id="h-books">1. Your books</h2>
+      <p class="hint small">Export from Goodreads: My Books, then Import and export, then Export Library. Open the downloaded CSV here.</p>
+    </div>
+    <div class="stack">
+      <label for="csv-file">Goodreads export (CSV)</label>
+      <input id="csv-file" type="file" accept=".csv,text/csv">
+    </div>
+    <details>
+      <summary>Or paste a list</summary>
+      <div class="stack" style="padding-top:8px">
+        <label for="paste-list">One book per line: Title by Author</label>
+        <textarea id="paste-list" placeholder="Piranesi by Susanna Clarke&#10;The Overstory by Richard Powers" autocapitalize="off" spellcheck="false"></textarea>
+        <div class="row"><button id="use-paste" type="button">Use this list</button></div>
+      </div>
+    </details>
+    <div id="books-msg" role="status" hidden></div>
+    <div id="books-summary" class="stack" hidden></div>
+    <div class="row"><button id="use-example" type="button" class="link">Try it with 6 example books</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-libs">
+    <div>
+      <h2 id="h-libs">2. Your libraries</h2>
+      <p class="hint small">Add each library whose card you have in Libby.</p>
+    </div>
+    <ul id="lib-chips" class="chips" aria-label="Chosen libraries"></ul>
+    <div class="stack">
+      <label for="lib-search">Search by library name</label>
+      <input id="lib-search" type="search" placeholder="e.g. king county" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <ul id="lib-results" class="picklist" hidden></ul>
+    </div>
+    <details>
+      <summary>Add by library key</summary>
+      <div class="stack" style="padding-top:8px">
+        <label for="lib-key">Key (the first part of your library's OverDrive address, e.g. nypl for nypl.overdrive.com)</label>
+        <div class="row">
+          <input id="lib-key" type="text" style="flex:1 1 12rem" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button id="lib-key-add" type="button">Add</button>
+        </div>
+      </div>
+    </details>
+    <div id="libs-msg" role="status" hidden></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-run">
+    <h2 id="h-run">3. Check availability</h2>
+    <details>
+      <summary>Options</summary>
+      <div class="opts">
+        <label><input id="opt-ebook" type="checkbox" checked> Ebooks</label>
+        <label><input id="opt-audiobook" type="checkbox" checked> Audiobooks</label>
+        <label><input id="opt-english" type="checkbox" checked> English-language editions only</label>
+        <div class="stack">
+          <label for="opt-shelf">Goodreads shelf to read from the CSV</label>
+          <input id="opt-shelf" type="text" value="to-read" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <span class="small hint">Applies the next time you open a CSV.</span>
+        </div>
+      </div>
+    </details>
+    <div class="row">
+      <button id="run" type="button" class="primary" disabled>Check availability</button>
+      <button id="cancel" type="button" hidden>Cancel</button>
+    </div>
+    <p id="run-hint" class="small hint"></p>
+    <progress id="progress" value="0" max="1" hidden></progress>
+    <p id="progress-text" class="small hint" role="status" hidden></p>
+  </section>
+
+  <section id="results" class="stack" aria-labelledby="h-results" hidden>
+    <h2 id="h-results">Results</h2>
+    <div id="filters" class="filters" role="group" aria-label="Filter results"></div>
+    <div class="row">
+      <label for="sort" class="small">Sort</label>
+      <select id="sort" style="width:auto">
+        <option value="status">Best first</option>
+        <option value="title">Title A to Z</option>
+      </select>
+      <button id="copy" type="button">Copy for Google Sheets</button>
+      <button id="download" type="button">Download CSV</button>
+    </div>
+    <div id="results-msg" role="status" hidden></div>
+    <ol id="book-list" class="books"></ol>
+  </section>
+
+  <footer>
+    <p>Your book list and library choices stay in this browser. Searches go straight from your device to OverDrive's public catalog service. Nothing is sent to a server run by this page.</p>
+    <p>Uses an unofficial OverDrive service, so it can break without notice. "Available now" means free copies outnumber holds. Check the Libby app before relying on it.</p>
+  </footer>
+</main>
+
+<script type="application/json" id="library-directory">[["1stsfgroup","1SFG (A)",0],["401go","401GO, Inc.",0],["alookatlibby","A Look at Libby",0],["aenetworks","A&E Televison Networks",0],["aarplibrary","AARP (staff)",0],["abashiri-library","Abashiri City Library",0],["abdulhameed","Abdul Hameed Shoman Public Library",0],["abilene","Abilene PL & Tom Green CL",1],["abilenetx","Abilene Public Library",0],["dctabudhabi","Abu Dhabi Department of Culture And Tourism",0],["accenture","Accenture Solutions Private Limited",0],["accuro","Accuro",0],["acmetool","Acme Construction Supply",0],["coloradodc","Across Colorado Digital Consortium",1],["actscollege","ACTS College",0],["adacorrectional","Ada County Correctional",0],["adamslibrary","Adams County Library System",0],["adf","ADF",0],["adventhealth","AdventHealth University",0],["advocatechildrens","Advocate Children's Hospital",0],["advocatehealth","Advocate Health-Midwest Region",0],["aeonhealth","Aeon Health",0],["ageo-city-library","Ageo City Library",0],["agnesscott","Agnes Scott College",0],["aiaohio","AIA Ohio",0],["aidecanada","AIDE Canada",0],["adu","Aioi Nissay Dowa Insurance Labor Union",0],["ajax","Ajax Public Library",0],["abo","Akershus, Buskerud and Østfold County Library",1],["akkeshi-town","Akkeshi Information Library",0],["akronlibrary","Akron-Summit County Public Library",0],["aamu","Alabama A&M University",0],["alabamacoushatta","Alabama Coushatta Tribe of Texas",0],["libalasu","Alabama State University",0],["aclib","Alachua County Library District",0],["alamancelibraries","Alamance County Public Libraries",0],["aclibrary","Alameda County Library",0],["adl","Alaska Digital Library",1],["alburycity","Albury City Library",0],["agcolearninglibrary","Alcohol and Gaming Commission of Ontario",0],["alexandria","Alexandria Library",0],["alhambralibrary","Alhambra Civic Center Library",0],["alingsas","Alingsås Library",0],["hancockcollege","Allan Hancock Community College",0],["acj","Allegheny County Bureau of Corrections",0],["acpl","Allen County Public Library",0],["alliance","Alliance Digital Media Library",1],["awa-library","Alpsalpine Workers Association",0],["altecind","Altec",0],["alvincollege","Alvin Community College",0],["amarillotx","Amarillo Public Library",0],["accairo","American Center Cairo - US Embassy Egypt",0],["americanfidelity","American Fidelity Assurance Company",0],["americanlibraryinparis","American Library in Paris",0],["amda","American Musical and Dramatic Academy",0],["amspaces","American Spaces",0],["amfabsteel","amfabsteel",0],["amherstcollege","Amherst College",0],["analog","Analog Devices, Inc.",0],["anan","Anan City Library",0],["andersonlibrary","Anderson County Library",0],["aneurinuk","Aneurin Leisure Trust",0],["angelinacollege","Angelina College",0],["angusalive","ANGUSalive",0],["ansanlib","Ansan City Library",0],["apl","Anseong-si Public Library",0],["acld","Apache County Library District",0],["apex","APEX Group",0],["apigroup","APi Group, Inc.",0],["anrdl","Appalachian and Northwestern Regional Libraries",1],["abclibrary","Appalachian Bible College",0],["appstate","Appalachian State University",0],["appliedmedical","Applied Medical",0],["lumlibrary","Appraisal Institute",0],["arakawa","Arakawa City Library (荒川区電子図書館サービス)",0],["arapahoe","Arapahoe Libraries",0],["ak","Arbeiterkammer",1],["asfmrc","Archdiocese of Santa Fe",0],["aaschool","Architectural Association School of Architecture",0],["arcwerx","ARCWERX",0],["asaap","Area Substance Alcohol Abuse Prevention Coalition",0],["azlibrary","Arizona State Library, Archives And Public Records",1],["azwestern-library","Arizona Western College",0],["adlc","Arkansas Digital Library Consortium",1],["asub","Arkansas State University - Beebe",0],["asumidsouth","Arkansas State University Mid-South",0],["asutrlibrary","Arkansas State University Three Rivers",0],["arktech","Arkansas Tech University",0],["lib2go","ArkansasLibrary2Go",1],["ahmlil","Arlington Heights Memorial Library",0],["arlington","Arlington Public Library",0],["arlingtontx","Arlington Public Library",0],["armyandnavy","Army and Navy Club",0],["arrowhead","Arrowhead Library System",1],["artcenter","ArtCenter College of Design",0],["artslinknb","ArtsLink NB",0],["asahisoftdrinks-union-library","Asahi Soft Drinks Labor Union",0],["myapl","Ascension Parish Library",0],["ash","ASH",0],["adbank","Asian Development Bank",0],["birthpsych","Association for Prenatal and Perinatal Psychology and Health",0],["astrazenecagitc","AstraZeneca GITC",0],["athensstate","Athens State University",0],["athleticbrewing","Athletic Brewing",0],["atlanlibrary","Atlan Library",0],["atlantahumane","Atlanta Humane Society",0],["acls","Atlantic County Library System",0],["atwaterlibrary","Atwater Library and Computer Centre",0],["aubora","Aubora OverDrive",1],["auckland","Auckland Libraries",0],["autacnz","Auckland University of Technology",0],["gaaugusta","Augusta Technical College",0],["aurecon","Aurecon",0],["aurora","Aurora Public Library",0],["aurorapl","Aurora Public Library",0],["aurorapubliclibrary","Aurora Public Library District",0],["austinlibrary","Austin Public Library",0],["abc","Australian Broadcasting Corporation",0],["parliamentau","Australian Parliamentary Library",0],["asiclibrary","Australian Securities and Investments Commission",0],["avalonfreelibrary","Avalon Free Public Library",0],["avondalelibrary","Avondale Public Library",0],["awa","AWA - a Christchurch and Selwyn shared collection",0],["awabank","Awa Bank Union",0],["awenculturaluk","Awen Cultural Trust",0],["ayahealth","Aya Healthcare",0],["ayabe-library","Ayabe City Library",0],["ayase","Ayase Municipal Library",0],["library-azusasekkei","Azusa Sekkei Co., Ltd",0],["babsonedu","Babson College",0],["bader","Bader College",0],["baileylibrary","Bailey Public Library",0],["bcplinfo","Baltimore County Public Library",0],["bangorpl","Bangor Public Library",0],["bangoruniv","Bangor University",0],["bankofcanada","Bank of Canada",0],["banskbeautybrands","Bansk Beauty Brands",0],["bapco","Bapco Energies",0],["simonsrock","Bard College at Simon's Rock",0],["barnsleycollege","Barnsley College",0],["barnsley","Barnsley Libraries",0],["auntjoan","Barona Cultural Center & Museum",0],["barrielibrary","Barrie Public Library",0],["balibrary","Barrington Area Library",0],["barstowcc","Barstow Community College",0],["bartowlibrary","Bartow County Library System",0],["bartshealthnhs","Barts Health NHS Trust",0],["bathworksmi","Bathworks of Michigan",0],["srnl-library","Battelle Savannah River Alliance",0],["baycountylibrary","Bay County Library System",0],["bayfed","Bay Federal Credit Union",0],["bayerag","Bayer AG",0],["badico","Bayern Digital Consortium",1],["bswhlibrary","BaylorScott&White Health Library",0],["baysidelibrary","Bayside Libraries",0],["baysidensw","Bayside Library NSW",0],["ebccls","BCCLS",1],["bchnhs","BCHC Birmingham Community Healthcare NHS Foundation Trust",0],["bci","BCI (British Columbia Investment Management Corporation)",0],["bld","Beaumont Library District",0],["bpls","Beaumont Public Library System",0],["beehive","Beehive Library Consortium",1],["xs","Beijing Xicheng Children's Library (北京市西城区青少年儿童图书馆)",0],["belden","Belden",0],["belbib","Belfast School of Theology",0],["belleislepl","Belle Isle Public Library",0],["bellevuelibrary","Bellevue Baptist Church Library",0],["bengalclub","Bengal Club",0],["bennington","Bennington College",0],["bentleydownload","Bentley University",0],["bergencc","Bergen Community College",0],["berkeleypubliclibrary","Berkeley Public Library",0],["bnl","Bermuda National Library",0],["glllibraries","Better Libraries Digital Consortium",1],["bhpl","Beverly Hills Public Library",0],["bhp","BHP",0],["bhsconstruction","BHS Construction Inc",0],["bgst","Biblical Graduate School of Theology",0],["bibliomation","Bibliomation, Inc.",1],["banrepcultural","Biblioteca Luis Ángel Arango",0],["colecciondigital","Biblioteca Pública Piloto y Sistema de Bibliotecas Públicas de Medellín",0],["mellansjo","Bibliotek Mellansjö",0],["sundbyberg","Bibliotek Sundbyberg",0],["vastraskaraborg","Bibliotek Västra Skaraborg",0],["gotlib","Biblioteken i Göteborg",0],["harryda","Biblioteken i Härryda kommun",0],["moers","Bibliothek Moers",0],["s-h","Bibliotheken SH",1],["bibliobrossard","Bibliotheque de Brossard",0],["bibliomontmagny","Bibliotheque de Montmagny",0],["v3r","Bibliotheques de Trois-Rivieres",0],["vaudreuildorion","Bibliothèque de Vaudreuil-Dorion",0],["banq","Bibliothèque et Archives nationales du Québec",0],["bibliomontreal","Bibliothèques Montréal",0],["elnb-bnnb","Bibliothèques publiques du N.-B. / New Brunswick Public Libraries",0],["bigcountry","Big Country Library System",1],["bilkent","Bilkent University Library",0],["birmingham-uk","Birmingham Libraries",0],["hamiltondiocesebfl","Bishop Farrell Library",0],["blackandveatch","Black & Veatch",0],["blackcountry","Black Country",0],["blackgold","Black Gold Cooperative Library System",1],["blackhills","Black Hills Library Digital Consortium",1],["blackfoot","Blackfoot Public Library",0],["blacktown","Blacktown City Libraries",0],["blizzard","Blizzard Entertainment",0],["bloomberg","Bloomberg Finance L.P.",0],["bmccnsw","Blue Mountains City Library Services",0],["brdc","Blue Ridge Download Consortium",1],["brrl","Blue Ridge Regional Library",0],["wfld","BlueCross BlueShield of Kansas",0],["bnaiisrael","Bnai Israel Congregation",0],["prestamodigitalbnc","BNC - Memoria que Conecta",0],["bocalibrary","Boca Raton Public Library",0],["boise","Boise Public Library",0],["boisestate","Boise State University Albertsons Library",0],["bolt","Bolt",0],["boobook","Boobook",1],["bookcornerhsc","Book Corner Library at HSC",0],["bookcloud","bookcloud",0],["boox","BooX",0],["boroondara","Boroondara Library Service",0],["bc","Boston College",0],["bpl","Boston Public Library",0],["bowvalleycollege","Bow Valley College",0],["bradfordlibraries","Bradford Libraries",0],["bradley","Bradley University",0],["braillehouse","Braille House Library",0],["brampton","Brampton Library",0],["brantford","Brantford Public Library",0],["brattlegroup","Brattle Group",0],["brazosport","Brazosport College",0],["brevard","Brevard County Library",0],["bportlibrary","Bridgeport Public Library",0],["bridges","Bridges",1],["byu","Brigham Young University",1],["brightonhovegb","Brighton & Hove City Libraries",0],["brightpointlibrary","Brightpoint Community College",0],["brisbane","Brisbane City Council Library Services",0],["bcpl","British Columbia Libraries",1],["britishcouncil","British Council Libraries Consortium",0],["britanicolibrary","Británico Library",0],["broadmead","Broadmead Inc",0],["brookline","Brookline Bancorp Inc.",0],["brooklyn","Brooklyn Public Library",0],["broward","Broward County Library",0],["brown","Brown University",0],["brownsville","Brownsville Public Library System",0],["bruneluniversity","Brunel University",0],["brunswickcounty","Brunswick County Library",0],["bcsdmc","Bryan and College Station Public Library System",0],["buckinghamshire","Buckinghamshire Council",0],["bauswooju","Buddhist Association of the United States",0],["buddhistlibrary","Buddhist Library",0],["buenapark","Buena Park Library District",0],["buffalo","Buffalo & Erie County Public Library",0],["burbank","Burbank Public Library",0],["burlington","Burlington County Library System",0],["burlingtonpl","Burlington Public Library",0],["burnaby","Burnaby Public Library",0],["burnetjail","Burnet County Jail",0],["burnsmcdonnell","Burns & McDonnell Engineering Co. Inc.",0],["digibel","Busan English Library",0],["buttecollege","Butte College",0],["elibrarybw","Büchereien Wien",0],["elibraryhh","Bücherhallen Hamburg",0],["cabconc","Cabarrus County Public Library",0],["cachecounty","Cache County Library",0],["caerphillyuk","Caerphilly Library Service",0],["cairnuniversity","Cairn University",0],["cairnmillar","Cairnmillar Institute",0],["cairnsqld","Cairns Libraries",0],["calderdalenhs","Calderdale and Huddersfield NHS Foundation Trust",0],["calderdaleuk","Calderdale Council",0],["calgary","Calgary Public Library",0],["calibreaudio","Calibre Audio",0],["californiacf","California Correctional Facilities",0],["caltech","California Institute of Technology",0],["californiajewishlibraries","California Jewish Library Digital Book Consortium",1],["calstatelb","California State University-Long Beach",0],["csusm","California State University-San Marcos",0],["cwsl","California Western School of Law",0],["calbcsg","Calvary Baptist Church Singapore",0],["calvarychurch","Calvary Church",0],["bibliotecaccb","Camara de Comercio de Bogota  - Bogota Chamber of Commerce",0],["camdigital","Camarillo Public Library",0],["cambridgeshirelibraries","Cambridgeshire County Council",0],["librarycamden","Camden Public Library",0],["camellia","Camellia Net Digital Catalog",1],["cppib","Canada Pension Plan Investment Board",0],["cfc","Canadian Forces College",0],["cmhrmcdp","Canadian Museum for Human Rights",0],["cwu-library","Canon Workers' Union",0],["canterbury","Canterbury Christ Church University",0],["canterburybankstownnsw","Canterbury-Bankstown Council",0],["capilano","Capilano University",0],["capitalarealibrary","Capital Area Library District",1],["clcn","Capital Library",0],["cldl","Carbon Lehigh Downloadable Library",0],["cardiffuk","Cardiff Libraries",0],["cardiffuniversity","Cardiff University",0],["carersforkidsnsw","Carers for Kids NSW",0],["carlalbertlibrary","Carl Albert State College",0],["carleton","Carleton College",0],["carmarthenshire","Carmarthenshire County Council",0],["carmel","Carmel Clay Public Library",0],["acla","Carnegie Library of Pittsburgh",0],["dubuque","Carnegie-Stout Public Library",0],["thomasbnc","Casa Thomas Jefferson Binational Center",0],["cascadeenergy","Cascade Energy",0],["catawba","Catawba College",0],["cat","Caterpillar Inc.",0],["aucklandcatholic","Catholic Diocese of Auckland",0],["cavancounty","Cavan County Libraries",0],["canadacollege","Cañada College",0],["ccbjgwlu","CCBJGW労働組合",0],["cfwpl","Cedar Falls and Waterloo Public Libraries",1],["centennialcollege","Centennial College",0],["card","Center for Autism and Related Disabilities",0],["levine-sklutjudaiclibrary","Center For Jewish Education / Levine Sklut Judaic Library",0],["centierbank","Centier Bank",0],["centralagencies","Central Agencies Library",0],["cnwlnhs","Central and North West London NHS Foundation Trust",0],["cals","Central Arkansas Library System",0],["cbott","Central Bank of Trinidad and Tobago",0],["centralcoast","Central Coast Library Service",0],["cccneb","Central Community College",0],["centraleu","Central European University",0],["chl","Central Highlands Regional Library",1],["cnlnsw","Central Northern Regional Library",0],["centralpalibraries","Central PA Libraries",1],["centralqld","Central Queensland Libraries Digital Consortia",1],["librarypoint","Central Rappahannock Regional Library",0],["ctdl","Central Texas Digital Consortium",1],["centralwestzone","Central West Zone",1],["centrocultural","Centro Cultural Costarricense Norteamericano",0],["ccnn","Centro Cultural Nicaraguense Norteamericano",0],["ccsa","Centro Cultural Salvadoreno Americano",0],["centrovenezolanoamericano","Centro Venezolano Americano",0],["cntry","Century College",0],["ceredigionuk","Ceredigion County Libraries",0],["cerris","Cerris",0],["chabotlibrary","Chabot College",0],["cfbc","Champion Forest Baptist Church",0],["cs","Changsha Library (长沙图书馆)",0],["cwcl","Changwon Central Library",0],["schwabinfocenter","Charles Schwab & Co.",0],["charlestoncounty","Charleston County Public Library System",0],["charlestonlibrarysociety","Charleston Library Society",0],["plcmc","Charlotte Mecklenburg Library",0],["chart","Chart Academy",0],["charteredaccountantsanz","Chartered Accountants Australia and New Zealand",0],["cvcclrc","Chattahoochee Valley Community College",0],["cvl","Chattahoochee Valley Libraries",0],["chcbl","Chattanooga Public Library",0],["ccls","Chautauqua-Cattaraugus Library System",0],["chelsea","Chelsea Library",0],["cdclib","Chengdu Library (成都图书馆)",0],["chplnj","Cherry Hill Public Library",0],["chesapeake","Chesapeake Public Library System",0],["chester","Chester County Library System",0],["chesterfield","Chesterfield Public Library",0],["chipublib","Chicago Public Library",0],["ccrc","Child Care Resource Center",0],["chsfl","Children's Home Society of Florida",0],["childrens","Children's Medical Center",0],["chinaqademo","China QA Demo Site",0],["cass","Chinese Academy of Social Sciences",0],["chinesedigitallibrary","Chinese Demo Site",0],["chinookarch","Chinook Arch Regional Library System",0],["chiryucity","Chiryu City Library",0],["cqlib","Chongqing Library 重庆图书馆",0],["christianlib","Christian Library Consortium",1],["christiandemo","Christian Library Demo",0],["christianlifeed","Christian Life College",0],["christianrecord","Christian Record Services for the Blind",0],["christiecommunitylibrary","Christie Community Library",0],["cnelib","Chungcheongnam-do Library",0],["cimoperation","CIM Operations PTY LTD",0],["cincinnatilibrary","Cincinnati & Hamilton County Public Library",0],["cinfin","Cincinnati Insurance Co",0],["citrus","Citrus County Library System",0],["cityplym","City College Plymouth",0],["altamonte","City of Altamonte Springs Library",0],["commerceca","City of Commerce Public Library",0],["cityofdarwin","City of Darwin",0],["coelibraries","City of Ekurhuleni Libraries",0],["cityofjerseytx","City of Jersey Village",0],["tokyo-kitacity-lib","City of Kita Library",0],["cityoflondonuk","City of London Libraries",0],["mankatocity","City of Mankato",0],["melbournelib","City of Melbourne Libraries",0],["cityofpalmerstonlibrary","City of Palmerston Library",0],["parralibrary","City of Parramatta Library",0],["ryde","City of Ryde Libraries",0],["santaclarita","City of Santa Clarita Public Library",0],["cityofsydney","City of Sydney Library Network",0],["cityoftshwane","City of Tshwane Library Services",0],["city","City St George’s, University of London",0],["clamsnet","CLAMS",1],["clarecounty","Clare County Library",0],["tccl","Claremont Colleges Library",0],["clarku","Clark University",0],["claycofl","Clay County Public Library System",0],["lruffin-smith","Cleveland Clinic Lou Ruvo Center for Brain Health",0],["cia","Cleveland Institute of Art",0],["clevnet","CLEVNET",1],["cefls","Clinton Essex Franklin Library System",0],["cmpl","Clinton-Macomb Public Library",0],["cloviscollegeca","Clovis Community College",0],["cna","CNA Corporation",0],["coalinga","Coalinga College",0],["cobbcounty","Cobb County Public Library System",0],["ccld","Cochise County Library District",0],["coffsharbour","Coffs Harbour Libraries",0],["cognyte","Cognyte",0],["coherentsolutions","Coherent Solutions",0],["colbertdigitaldownloads","Colbert Digital Downloads",1],["cesa","Colegio de Estudios Superiores de Administracion",0],["ccslibrary","College for Creative Studies",0],["oclsca","College Libraries Ontario",1],["coa","College of Alameda",0],["cf","College of Central Florida",0],["cod","College of DuPage",0],["csiedu","College of Southern Idaho",0],["com","College of the Mainland",0],["cos","College of the Sequoias",0],["siskiyous","College of the Siskiyous",0],["collier","Collier County Public Library",0],["collin","Collin County Community College District",0],["reddecolombos","Colombian/American Bi-national Centers",0],["coloradocc","Colorado Community Colleges System",1],["cmhifl","Colorado Mental Health Institute-Fort Logan",0],["bibliotecacolsubsidio","Colsubsidio",0],["gocolumbia","Columbia College - Sonora",0],["ciu","Columbia International University",0],["cscclibrary","Columbia State Community College",0],["columbia","Columbia University",0],["comfama","Comfama",0],["bibliotecascomfamiliar","Comfamiliar Risaralda",0],["bibliotecacomfandi","Comfandi",0],["comfenalcotolima","Comfenalco Tolima",0],["comcom","Commerce Commission",0],["commerceresearchlibrary","Commerce Research Library",0],["communardo","Communardo",0],["ccphiladelphia","Community College of Philadelphia",0],["ccri","Community College of Rhode Island",0],["clebucks","Community Library e-Cooperative (CLE) of Bucks County",1],["communitylibrary","Community Library Network",0],["bluebookshelf","Compassion International",0],["bibliotecadigitalcompensar","Compensar",0],["cumarshlibrary","Concord University",0],["condenast","Conde Nast",0],["conestoga","Conestoga College",0],["cclcvic","Connected Libraries",0],["conncoll","Connecticut College",0],["ctstate","Connecticut State Community College",1],["connors","Connors State College",0],["crsbpl","Consortium BIBLIO (Books)",1],["biblioquebec","Consortium BIBLIO (Magazines)",1],["constructortech","Constructor Technology",0],["ccc","Contra Costa County Library",0],["conyersrockdale","Conyers-Rockdale Library System",0],["cookmemorial","Cook Memorial Public Library",0],["colincc","Copiah-Lincoln Community College",0],["coqlibrary","Coquitlam Public Library",0],["corkcityie","Cork City Library",0],["corkcountyie","Cork County Library",0],["cornell","Cornell University Library",0],["ciccc","Cornerstone International Community College in Canada",0],["iberoco","Corporación Universitaria Iberoamericana",0],["cosmosclub","Cosmos Club",0],["brant","County of Brant Public Library",0],["slolibrary","County of San Luis Obispo Public Libraries",0],["cpls","Coweta Public Library System",0],["coxenterprises","Cox Corporate Services",0],["cpcregional","Craven-Pamlico Regional Library",0],["ccfls","Crawford County Federated Library System",0],["cea","Creative Economy Agency",0],["creativehs","Creative Health Services",0],["crisisuk","Crisis UK",0],["crosslandacademy","Crossland Construction Company, Inc.",0],["crossmap","Crossmap Book Club",0],["cru","CRU",0],["cucusa","CUC University",0],["perthandkinross","Culture Perth & Kinross Limited",0],["cumberland","Cumberland Council Libraries",0],["kbcc","CUNY Kingsborough Community College",0],["curtislibrary","Curtis Memorial Library",0],["ccpl","Cuyahoga County Public Library",0],["cwmars","CW MARS",1],["cw2mil","CW2 Christopher G. Nason Military Intelligence Library",0],["melbourneclub","Cycnus Library",0],["cegepvicto","Cégep de Victoriaville",0],["cegepheritageco","Cégep Heritage College",0],["cegeplimoilou","Cégep Limoilou",0],["deshaw","D.E. Shaw Group",0],["dacotahbank","Dacotah Bank",0],["daemen","Daemen University",0],["dailyjournal","Daily Journal Corporation",0],["dakotastate","Dakota State University",0],["dal","Dalhousie University Killam Library",0],["dallaslibrary","Dallas Public Library",0],["drcldc","Dallas/Rockwall Church Library Digital Collection",1],["readdfci","Dana-Farber Cancer Institute",0],["danburylibrary","Danbury Public Library",0],["danesheriff","Dane County Jail",0],["dbrl","Daniel Boone Regional Library",0],["drf","Danville Regional Foundation",0],["darien","Darien Library",0],["dauphin","Dauphin County Prison",0],["davidyellin","David Yellin Academic College of Education",0],["dayton","Dayton Metro Library",1],["deanzacollege","De Anza College",0],["demontfort","De Montfort University",0],["dechert","Dechert LexisNexis Digital Collection",0],["defenceforcesireland","Defence Forces Library",0],["dls","Defence Library Service",0],["dia","Defense Intelligence Agency",0],["dliflc","Defense Language Institute",0],["dekalb","DeKalb County Public Library",0],["delmarcollege","Del Mar College",0],["delawarecf","Delaware Correctional Facilities",0],["delco","Delaware County Library System",0],["delaware","Delaware Libraries",1],["dementia-e-library","Dementia Australia Library",0],["denbighshireuk","Denbighshire Libraries",0],["denver","Denver Public Library",0],["denverseminary","Denver Seminary",0],["dod","Department of Defense",1],["doescience","Department of Energy, Office of Science",0],["dfat","Dept of Foreign Affairs and Trade - H.V. Evatt Library",0],["derbycitygb","Derby City Council",0],["derbyshireuk","Derbyshire County Council",0],["dmpl","Des Moines Public Library",0],["dpls","Deschutes Public Library",0],["desototx","DeSoto Public Library",0],["detroitpubliclibrary","Detroit Public Library",0],["devoteamrevolve","Devoteam Revolve",0],["larepublica","Diario de La República S.A.S",0],["shinshu-kyodo-library","Digi Tosho Shinshu",0],["clc","Digital Downloads Ohio",1],["icpl","Digital Johnson County",1],["dlil","Digital Library of Illinois",1],["dinecollege","Diné College",0],["dgcbc","Directors Guild of Canada, British Columbia",0],["dclibrary","District of Columbia Public Library",0],["dogoklib","Dogok Library",0],["dogwood","Dogwood Digital Library",1],["donaldwyatt","Donald Wyatt Correctional Jail",0],["donegalcountyie","Donegal County Library",0],["dorchesterlibrarysc","Dorchester County Library System",0],["dorsetcountynhs","Dorset County Hospital NHS Foundation Trust",0],["dorval","Dorval Library",0],["douglasbcuk","Douglas City Council",0],["dcl","Douglas County Libraries",0],["douglascpl","Douglas County Public Library",0],["tln","Download Destination",1],["downloadlibrary","downloadLibrary",1],["drakestate","Drake State Community and Technical College",0],["dualasiapacific","DUAL Asia Pacific",0],["dubaipublic","Dubai Public Library - Dubai Culture & Arts Authority",0],["dublincityie","Dublin City Libraries",0],["duke-energy","Duke Energy Corporation",0],["duke","Duke University",0],["dlrcoco","Dun Laoghaire-Rathdown County Council Public Library Service",0],["durango","Durango Public Library",0],["durhamcountyuk","Durham County Council",0],["durhamcounty","Durham County Library",0],["durhamuni","Durham University",0],["dutchbros","Dutch Bros Coffee",0],["dwellcc","Dwell Community Church",0],["dxcrc","DX-CRC ELIBRARY",0],["e-ausleihe-franken","E-Ausleihe Franken",1],["e-inc","E-iNC Library",1],["ecoop","E-Library Co-Op of Southeast Louisiana",1],["e-thek","e-Thek",0],["enhtnhs","East and North Hertfordshire Teaching NHS Trust",0],["eacc","East Arkansas Community College",0],["ebr","East Baton Rouge Parish Library",0],["ebonnerlibrary","East Bonner County Library District",0],["ecrl","East Central Regional Library",0],["ecpl","East Chicago Public Library",0],["edlcuk","East Dunbartonshire Libraries",0],["eastgippsland","East Gippsland Shire Library",0],["egfmn","East Grand Forks-Campbell Library",0],["eastlothianuk","East Lothian Library Service",0],["eastridinguk","East Riding Libraries",0],["kemplibrary","East Stroudsburg University of Pennsylvania",0],["esneft","East Suffolk and North Essex NHS Foundation Trust",0],["easternflorida","Eastern Florida State College",0],["eodls","Eastern Oklahoma Library System",0],["easternuni","Eastern University",0],["eastmanchemical","Eastman Chemical Company",0],["eastonpl","Easton Library District",0],["eblink","eBLINK",0],["ebooksforyou","eBooks for You",1],["swiss","EBOOKS SWITZERLAND",1],["ebranch2go","eBranch2Go",1],["eccbc","ECCBC Digital Library",0],["edgehill","Edge Hill University",0],["edinburghkids","Edinburgh Kids & Teens",0],["edinburgh","Edinburgh Libraries",0],["epl","Edmonton Public Library",0],["edsn","Educational Development and Support Network",0],["ejlibrary","Edward Jones",0],["elcamino","El Camino Community College District",0],["biblioteeca","El Economista",0],["elpaso","El Paso Public Library",0],["elend","eLEND",0],["elm","eLibraries Manitoba",1],["elibrary247","eLibrary 24/7",1],["elibrarynj","eLibrary NJ",1],["etown","Elizabethtown College",0],["elonnc","Elon University",0],["emedialibrary","eMediaLibrary",1],["e-medien-franken","eMedien Franken",1],["emu","eMedien Unterfranken",1],["emedienlaendle","eMedienländle",1],["emory","Emory University",0],["emcins","Employer's Mutual Casualty Company (EMC Insurance)",0],["endavauniversity","Endava",0],["enveda","Enveda",0],["eur","Erasmus University Rotterdam",0],["ereolenglobal","eReolen Global",1],["ericksonhall","Erickson-Hall Construction Co",0],["erielibrary","Erie County Public Library",0],["erieinsurance","Erie Insurance",0],["bibliotecaespol","Escuela Superior Politecnica Del Litoral",0],["esperanzac","Esperanza College",0],["essexca","Essex County Library",0],["elin","Estacado Library Information Network",1],["bibliotecadigitalnl","Estado de Nuevo Leon",0],["eumetsat","EUMETSAT",0],["eunoiaj","Eunoia Junior College",0],["eureka","Eureka College",0],["ecb","European Central Bank (ECB)",0],["eunc","European Nazarene College",0],["epannapolis","Evangelical Presbyterian Church",0],["evanstonlibrary","Evanston Public Library",0],["evpl","Evansville Vanderburgh Public Library",0],["everettcc","Everett Community College",0],["everett","Everett Public Library",0],["expandenergy","Expand Energy",0],["edc","Export Development Canada",0],["fairfax","Fairfax County Public Library",0],["fairfieldnsw","Fairfield City Open Libraries",0],["fairfield","Fairfield Public Library",0],["fairfieldedu","Fairfield University",0],["faithmc","Faith Methodist Church Singapore",0],["falkirkuk","Falkirk Libraries",0],["falklandcommunitylibrary","Falkland Community Library",0],["fxplus","Falmouth University",0],["mchfamilylibrary","Family Resource Center and Library",0],["fcsamerica","Farm Credit Services of America",0],["infoway","Farmington Public Library",0],["farnct","Farnborough College of Technology",0],["fdicorp","FDIC Library (Federal Deposit Insurance Corp.)",0],["fbi","Federal Bureau of Investigation Library",0],["frb","Federal Reserve Bank Libraries",0],["fraserhospfed","Federation of Fraser Region Hospice Societies",0],["fieldsteinlib","Feldstein Library, Congregation Neveh Shalom",0],["fieldstbaptist","Field Street Baptist Church",0],["fifeuk","Fife Libraries",0],["foalibrary","Finance of America",0],["fingalcountyie","Fingal County Library",0],["flls","Finger Lakes Library System",1],["nswfr","Fire and Rescue NSW",0],["fbkosciusko","First Baptist Church Kosciusko",0],["fba","First Baptist Church of Atlanta",0],["clevelandfbc","First Baptist Cleveland Church Library",0],["fbcl","First Baptist Longview",0],["first","First Regional Library",0],["firsttech","First Tech",0],["fittech","Fit Technologies",0],["fitchburgstate","Fitchburg State University",0],["cocolib","Flagstaff City-Coconino County Public Library",0],["flatiron","Flatiron Health",0],["aurauk","Flintshire Libraries",0],["floridacf","Florida Correctional Facilities",0],["fdot","Florida Department of Transportation",0],["myfwc","Florida Fish and Wildlife Conservation Commission",0],["fgculibrary","Florida Gulf Coast University",0],["lcs","Florida League of Christian Schools",0],["flowermound","Flower Mound Public Library",0],["focusonthefam","Focus on the Family",0],["fdltcc","Fond du Lac Tribal & Community College",0],["ford","Ford Motor Company",0],["forsyth","Forsyth County Public Library",0],["fortbend","Fort Bend County Libraries",0],["fmb","Fort Myers Beach Public Library",0],["fortvancouver","Fort Vancouver Regional Libraries",0],["fwpl","Fort Worth Public Library",0],["fourcounty","Four County Library System",1],["fox","FOX",0],["fandm","Franklin & Marshall College",0],["fclspa","Franklin County Library System",0],["frankston","Frankston City Libraries",0],["frasercoast","Fraser Coast Regional Libraries",0],["fvrl","Fraser Valley Regional Library",0],["fredhutch","Fred Hutch Cancer Center",0],["fselibrary","Free State Public Library System",0],["fremont","Fremont Public Library",0],["fresno","Fresno County Public Library",0],["frimleynhs","Frimley Health NHS Foundation Trust",0],["frisco","Frisco Public Library",0],["frontrange","Front Range Downloadable Library",1],["fsucard","FSU Center for Autism and Related Disabilities",0],["fdsm","Fudan University - School of Management",0],["fjclib","Fujian Juvenile & Children's Library",0],["fukuyama-library","Fukuyama City Library",0],["fullerton","Fullerton Public Library",0],["fulcolibrary","Fulton County Library System",0],["fundacionepm","Fundación EPM-Biblioteca EPM",0],["tecnologicocomfenalco","Fundación Universitaria Tecnológico de Comfenalco",0],["fyul","FYUL",0],["gscclibrary","Gadsden State Community College",0],["gailborden","Gail Borden Public Library District",0],["galwayie","Galway Public Library",0],["gplebooks","Gary Public Library",0],["gatineauca","Gatineau Public Library",0],["gavilan","Gavilan College",0],["geh-online","GEH-online",1],["gia","Gemological Institute of America",0],["thegdl","Genesee District Library",0],["geodis","GEODIS",0],["wallace","George C Wallace State Community College-Selma",0],["georgefoxu","George Fox University",0],["gwu","George Washington University",0],["georgesriver","Georges River Council Library",0],["gadd","Georgia Download Destination",1],["georgiahighlands","Georgia Highlands College",0],["georgiasouthern","Georgia Southern University",0],["gatech","Georgia Tech Library",0],["georgiapacific","Georgia-Pacific, LLC",0],["germantownbaptist","Germantown Baptist Church",0],["musselmanlibrary","Gettysburg College",0],["ghea21","GHEA21",0],["gifucity-d-library","Gifu City Library",0],["gcldaz","Gila County Library District",0],["glasgowkids","Glasgow Kids",0],["glasgow","Glasgow Libraries",0],["libraryglion","Glion Institute of Higher Education",0],["globalaffairsca","Global Affairs, Government of Canada",0],["global","Global Christian University",0],["gmtti","Global Medical & Technical Training Institute",0],["flint","Gloria Coles Flint Public Library",0],["nhsgloucestershire","Gloucestershire Hospitals NHS Foundation Trust",0],["gofurther","Go Further",0],["gokatown-e-library","Goka Town Central Community Center Library",0],["goldcoast","Gold Coast Libraries",0],["ncgrl","Goldfields Libraries",0],["goucherlibrary","Goucher College Library",0],["gvrlc","Goulburn Valley Regional Library Corporation",0],["govst","Governors State University",0],["midland-mi","Grace A. Dow Memorial Library",0],["gptx","Grand Prairie Public Library System",0],["grpl","Grand Rapids Public Library",0],["gldl","Great Lakes Digital Libraries",1],["greatormond","Great Ormond Street Hospital",0],["griver","Great River Regional Library",0],["greaterdandenong","Greater Dandenong Libraries",0],["phoenix","Greater Phoenix Digital Library",1],["gvpl","Greater Victoria Public Library",0],["greengoldlibraries","Green Gold Consortium",1],["gmlc","Green Mountain Library Consortium",1],["greenberg","Greenberg Families Library",0],["greensboropubliclibrary","Greensboro Public Library",0],["greenvillesc","Greenville County Library System",0],["greenvilleu","Greenville University",0],["greenwich","Greenwich Library",1],["greenwoodsc","Greenwood County Library System",0],["onegrid","GridSME",0],["ghdhealthlibrary","Grossmont Healthcare District’s Health & Wellness Library",0],["groundworks","Groundworks",0],["grupobolivar","Grupo Bolivar",0],["gpls","Guam Public Library System",0],["guernseypublic","Guernsey Public Library",0],["gulfseminary","Gulf Theological Seminary",0],["gundersenlibrary","Gundersen Health Sciences Library",0],["gundersenhealth","Gundersen Mooney Stanek Libraries",0],["gclib","Gwacheon Public Library",0],["gwangjinlib","Gwangjin District Public Library",0],["gylib","Gwangyang Library",0],["gwinnett","Gwinnett County Public Library",0],["gwynedduk","Gwynedd Libraries",0],["cyberlibrary","Gyeonggi Library",0],["gympie","Gympie Regional Libraries",0],["habibuni","Habib University",0],["hilib","Hainan Library (海南省图书馆)",0],["halifax","Halifax Public Libraries",0],["hamiltonnz","Hamilton City Libraries",0],["hepl","Hamilton East Public Library",0],["hpl","Hamilton Public Library",0],["hamline","Hamline University",0],["hammondcare","HammondCare",0],["hcdl","Hancock County Download Library",1],["hancock","Hancock County Library System",0],["hcplibrary","Hancock County Public Library",0],["hzlib","Hangzhou Public Library (杭州图书馆)",0],["hansonsd","Hanson Community Library",0],["hardinguniversity","Harding University",0],["harperadams","Harper Adams University",0],["harpercollege","Harper College",0],["harpercollinsinfocenter","HarperCollins",0],["hcpl","Harris County Public Library",0],["hacc","Harrisburg Area Community College",0],["harrogatenhs","Harrogate and District NHS Foundation Trust",0],["hplct","Hartford Public Library",0],["harvardu","Harvard University",0],["clarendoncountylibrary","Harvin Clarendon County Library",0],["haskell","Haskell Indian Nations University",0],["hawaii","Hawaii State Public Library System",0],["hawkesbury","Hawkesbury Library Service",0],["hayley-group","Hayley Group Limited",0],["hcrc","HCRC Digital Library",0],["healthreghub","Health Regulatory Hub Library",0],["usace","HECSA",0],["hempcolib","Hempstead County Library",0],["hendersonlibraries","Henderson Libraries",0],["huie","Henderson State University, Huie Library",0],["henrico","Henrico County Public Library",0],["equityresourcelibrary","Henry Parkes Equity Resource Centre",0],["hcu","Heritage Christian University",0],["hertfordshireuk","Hertfordshire Libraries",0],["hcln","High Country Library Network",0],["highplains","High Plains Library District",0],["hpulibraries","High Point University",0],["hct","Higher Colleges of Technology",0],["highlandparktexas","Highland Park Library",0],["hillingdonuk","Hillingdon Libraries",0],["hcplc","Hillsborough County Public Library Cooperative",0],["hindscc","Hinds Community College",0],["hktest","HK Test",0],["hamadmedical","HMC Person-Centered Care Cultural Experience Library",0],["claytonnc","Hocutt Ellington Memorial Library",0],["hollins","Hollins University",0],["holmeslibrary","Holmes Community College",0],["holocaustmem","Holocaust Memorial Miami Beach",0],["boniuklibrary","Holocaust Museum Houston, Boniuk Library",0],["hslda","Home School Legal Defense Association",0],["homertonnhs","Homerton Healthcare NHS Foundation Trust",0],["hkpl","Hong Kong Public Libraries (HKPL)",0],["honcclib","Honolulu Community College",0],["hoodcounty","Hood County Public Library",0],["hoodseminary","Hood Theological Seminary",0],["hopkinscc","Hopkinsville Community College",0],["hornsby","Hornsby Shire Library & Information Service",0],["hcml","Horry County Memorial Library",0],["hortlibrary","Horticulture Library Consortium",1],["houseofwisdom","House of Wisdom",0],["hadc","Houston Area Digital Media Catalog",1],["houstonmet","Houston Methodist Sugar Land Hospital",0],["houstonlibrary","Houston Public Library",0],["howardcc","Howard Community College",0],["hhmi","Howard Hughes Medical Institute",0],["hubei","Hubei Provincial Library (湖北省图书馆)",0],["hubspot","HubSpot",0],["hudl","Hudl",0],["hccc","Hudson County Community College",0],["hulllibrariesuk","Hull Libraries",0],["humber","Humber College",0],["hrh","Humber River Health",0],["hunterlibrariesgroup","Hunter Libraries Group",1],["huntingdon","Huntingdon College",0],["hbpl","Huntington Beach Public Library",0],["huntingtonuniversity","Huntington University",0],["icanabcl","ICANA - el Centro Binacional (American Spaces)",0],["ichikawaekinan","Ichikawa City Ichikawa Station South Gate Library (Viax)",0],["id8","ID8 Digital Library",1],["icculibrary","Idaho Central Credit Union",0],["idahodigital","Idaho Digital Consortium",1],["ifpl","Idaho Falls Public Library",0],["inlgov","Idaho National Laboratory",0],["idea","IDEA by ICfL",0],["iem","IEM",0],["ihcnz","IHC New Zealand",0],["ikeskeltoncarl","Ike Skelton Combined Arms Research Library (CARL)",0],["illinoiscf","Illinois State Correctional Facilities",0],["impactce","Impact CE",0],["imperialwest","Imperial College Healthcare and Chelsea & Westminster NHS Trusts",1],["imperial","Imperial College, London",0],["indianbible","Indian Bible College",0],["indiannavy","Indian Navy",0],["irclibrary","Indian River County Library",0],["indianadoc","Indiana Department of Correction",1],["idl","Indiana Digital Library",1],["indianassc","Indiana Schools Shared Collection",1],["indypl","Indianapolis Public Library",0],["infineon","Infineon Technologies AG",0],["infoblox","Infoblox",0],["inglewoodpl","Inglewood Public Library",0],["ilg","InlandShare",1],["idctest","Instant Digital Card Test",0],["iue","Institución Universitaria de Envigado - IUE",0],["bibliotecaiudigital","Institución Universitaria Digital de Antioquia",0],["inll","Institut national des langues Luxembourg (INLL)",0],["leadingre","Institute by LeadingRE",0],["ite","Institute of Technical Education Library",0],["bibliotecasinacap","Instituto Profesional INACAP",0],["bibliotecatec","Instituto Tecnologico y De estudios Superiores De Monterrey",0],["intactfc","Intact",0],["interchurchcenter","Interchurch Center",0],["ifad","International Fund for Agricultural Development (IFAD)",0],["isb","International School of Beijing",0],["icsdia","Interstate 35 Community School District",0],["anahuacmx","Investigaciones y Estudios Superiores, S.C.",0],["iona","Iona University",0],["ipas","Ipas",0],["ipswichqld","Ipswich Libraries",0],["iredell","Iredell County Library",0],["irvine","Irvine Public Library",0],["ivc","Irvine Valley College",0],["irvinglibrary","Irving Public Library",0],["jccgv","Isaac Waldman Jewish Public Library",0],["angleseyuk","Isle of Anglesey County Council - Llangefni Library",0],["islingtonuk","Islington Libraries",0],["telaviv","Israel Digital",1],["itako-public","Itako Public Library",0],["iteso","ITESO, Universidad Jesuita de Guadalajara",0],["kingabdula","Ithra Library",0],["ilu","ITOCHU Labor Union",0],["ivanlibrary","Ivan the Terrier, Inc.",0],["iyte","Izmir Institute of High Technology",0],["jcls","Jackson County Library Services",0],["myjdl","Jackson District Library",0],["jgrls","Jackson-George Regional Library System",0],["jhlibrary","Jackson/Hinds Library System",0],["jpl","Jacksonville Public Library",0],["japanesedemo","Japanese Demo Site",0],["jarfalla","Jarfalla Library",0],["jasmine","Jasmine Digital Library",1],["jaspersfbc","Jasper's First Baptist Church",0],["jctclearningcommons","Jefferson Community and Technical College",0],["jclc","Jefferson County Library Cooperative",1],["jefferson","Jefferson County Public Library",0],["jeff","Jefferson Parish Library",0],["jjei","Jeju International Education Institute Library",0],["jericholibrary","Jericho Public Library",0],["jclibrary","Jersey City Free Public Library",0],["jessiehallett","Jessie F. Hallett Memorial Library",0],["jplmontreal","Jewish Public Library",0],["jfcsholocaustcenter","JFCS Holocaust Center",0],["jscl","Jiangsu Children's Digital Library (江苏省少儿数字图书馆)",0],["jaqtsg","Jing'an District Library (上海市静安区图书馆)",0],["jocolibrary","Johnson County Library and Olathe Public Library",0],["johnston","Johnston County Affiliated Libraries",0],["thejointco","Joint Commission",0],["jsou","Joint Special Operations University",0],["jcjc","Jones County Junior College",0],["jibcca","Justice Institute of British Columbia",0],["kagacitydigitallibrary","Kaga City Library",0],["kplibraries","Kaiser Permanente Libraries",0],["kamiamakusa-city","Kamiamakusa City Library",0],["kamikawa-town","Kamikawa Town Library",0],["kanda-library","Kanda Town Library",0],["kanoya-ebook","Kanoya City Library",0],["rarakanra-library","Kanra Town Library",0],["kclibrary","Kansas City Public Library",0],["sgch","Kantonsbibliothek StGallen",0],["kapsarc","KAPSARC Library",0],["kariya-city","Kariya City Library",0],["kashiwara-city-library","Kashiwara Public Library",0],["katrineholmsbibliotek","Katrineholms Bibliotek",0],["kawamata-town","Kawamata Town Board of Education Office",0],["keele","Keele University",0],["kvcc","Kennebec Valley Community College",0],["kennebunklibrary","Kennebunk Free Library",0],["biboroughuk","Kensington & Chelsea and Westminster Libraries",1],["kent","Kent County Council",0],["kdl","Kent District Library",0],["kenton","Kenton County Public Library",0],["kyunbound","Kentucky Libraries Unbound",1],["kern","Kern County Library",0],["keyassets","Key Assets",0],["keylooplibrary","Keyloop",0],["kplonline","Kigali Public Library",0],["kildareie","Kildare County Council Library and Arts Service",0],["kilkennyie","Kilkenny County Library",0],["kindai","Kindai University",0],["kcls","King County Library System",0],["kcl","King's College London",0],["kings","Kings County Library",0],["kfpl","Kingston Frontenac Public Library",0],["kingsway","Kingsway Christian College",0],["kwbc","Kirby Woods Baptist Church",0],["kirklees","Kirklees Libraries",0],["kishiwada-city","Kishiwada City Library",0],["kitsapjail","Kitsap County Jail",0],["krl","Kitsap Regional Library",0],["library-kiyose","Kiyose City Library",0],["klaviyo","Klaviyo",0],["knox","Knox College",0],["knoxcounty","Knox County Public Library",0],["kokubunji-city-lib","Kokubunji City Library",0],["kmbs","Konica Minolta Business Solutions USA, Inc.",0],["krsbib","Kristiansand folkebibliotek",0],["krgnsw","Ku-ring-gai Library",0],["kumagayacity","Kumagaya City Library",0],["kumatori-library","Kumatori Town Library",0],["kuna","Kuna District Library",0],["kuriyama-town","Kuriyama Town Library",0],["kurthmemorial","Kurth Memorial Library",0],["rohrbachlibrary","Kutztown University of Pennsylvania",0],["kpu","Kwantlen Polytechnic University",0],["lacountylibrary","LA County Library",0],["laleche","La Leche League Canada",0],["laportelibrary","La Porte County Public Library",0],["lavergnelibrary","La Vergne Public Library",0],["lafayette","Lafayette College",0],["lafourche","Lafourche Parish Public Library",0],["larl","Lake Agassiz Regional Library",0],["lakeareatech","Lake Area Technical College",0],["lakecentralin","Lake Central School Corporation",0],["mylakelibrary","Lake County Library System",1],["lakecounty","Lake County Public Library",0],["lakemac","Lake Macquarie City Library",0],["laketrust","Lake Trust",0],["lakeland","Lakeland Digital Library",1],["lakesidebc","Lakeside Baptist Church",0],["lambethuk","Lambeth Libraries",0],["edownload","Lambton County Library",0],["lammjewishlibraryaustralia","LAMM Jewish Library of Australia",0],["lancashireuk","Lancashire County Library and Information Service",0],["lancasteruniversity","Lancaster University",0],["landerco","Lander County Public Library",0],["landmarkedu","Landmark College",0],["lanemed","Lane Medical Library",0],["laoiscountyie","Laois County Library",0],["lplelibrary","Laredo Public Library",0],["lareleve","larelève",0],["larimerjail","Larimer County Jail",0],["larkin","Larkin University",0],["lascruces","Las Cruces Public Libraries",0],["lpclibrary","Las Positas College",0],["lasvegas","Las Vegas-Clark County Library District",1],["clasalle","LaSalle College",0],["lasalle","Lasalle Parish Library",0],["latrobevic","Latrobe City Library",0],["laurelridge","Laurel Ridge Community College",0],["lawrencepl","Lawrence Public Library",0],["lawsonstate","Lawson State Community College-Birmingham",0],["learninglinkathpl","LEARNINGLink by Houston Public Library",0],["lclibs","Lebanon County Libraries",0],["lvc","Lebanon Valley College",0],["lcls","Lee County Library System",0],["leechlaketribalcollege","Leech Lake Tribal College",0],["leedslibraryuk","Leeds Libraries",0],["leeward","Leeward Community College",0],["lehigh","Lehigh University",0],["leicesteruk","Leicester Libraries",0],["leicestershire","Leicestershire Library Services",0],["stadtbibliothek-leipzig","Leipziger Stadtbibliothek",0],["dundeecity","Leisure and Culture Dundee",0],["leitrimcountyie","Leitrim County Library",0],["lerum","Lerums Bibliotek",0],["bibliothequesdesherbrooke","Les Bibliothèques de Sherbrooke",0],["leselounge","Leselounge",0],["lcta","Lewis & Clark Trail Alliance Sherman Library",0],["lex","Lexington County Public Library System",0],["lexpublib","Lexington Public Library",0],["lncorrections","LexisNexis Corrections Demo",0],["lasch","Leysin American School",0],["ldc","Libby Discovery Collection",0],["insiders","Libby Insiders Library",0],["libertyuniversity","Liberty University",0],["act","Libraries ACT",0],["librariesniuk","Libraries NI",0],["thelosc","Libraries of Stevens County",0],["lsw","Libraries Southwest Consortium",1],["librariestasmania","Libraries Tasmania",0],["libraryconnection","Library Connection, Inc.",1],["lpbp","Library of Parliament",0],["lancasterlibraries","Library System of Lancaster County",0],["libraryutazu","Library Utazu",0],["libriid","LIBRI System, Inc.",1],["lic","LIC (Livestock Improvement Company)",0],["lcu","Lifestyle Christian University",0],["limerickie","Limerick City & County Library",0],["lincoln","Lincoln City Libraries",0],["lincolnshirelibraries","Lincolnshire Libraries",0],["lincsinspireuk","Lincs Inspire Libraries",0],["linnbenton","Linn-Benton Community College",0],["lion","LION: Libraries Online",1],["listeneasternwv","Listen Eastern West Virginia",1],["listening-books","Listening Books",0],["lit","LIT Library",0],["lti","Literature Translation Institute of Korea (LTI Korea)",0],["lltc","Little Libraries That Could",1],["aberdeenshirelibraries","Live Life Aberdeenshire Libraries",0],["liveoakga","Live Oak Public Libraries",0],["livebrary","Livebrary.com",1],["livermore","Livermore Public Library",0],["liverpool","Liverpool Libraries and Information Service",0],["livingstla","Livingston Parish Library",0],["logan","Logan Libraries",0],["lccpl","Logansport-Cass County Public Library",0],["barnet","London Borough of Barnet",0],["bexley","London Borough of Bexley",0],["camdenlibrary","London Borough of Camden",0],["lbrut","London Borough of Richmond upon Thames",0],["lbs","London Business School",0],["lpl","London Public Library",0],["lsbu","London South Bank University",0],["lonestardigitalibrary","Lone Star Digital Library",1],["elprlibrary","Lonesome Pine Regional Library",0],["lbpl","Long Beach Public Library",0],["longfordcounty","Longford County Library",0],["downbeach","Longport Public Library",0],["longwood","Longwood University",0],["lacnm","Los Alamos County Library System",0],["lametro","Los Angeles County Metropolitan Transportation Authority",0],["lacoelib","Los Angeles County Office of Education",0],["lapiercecollege","Los Angeles Pierce College",0],["lapl","Los Angeles Public Library",0],["lavc","Los Angeles Valley College",0],["losmedanosedu","Los Medanos College",0],["losriosccd","Los Rios Community College District",1],["lcpl","Loudoun County Public Library",0],["loughborough","Loughborough University",0],["lsuhs","Louisiana State University Health Shreveport",0],["lfpl","Louisville Free Public Library",0],["louthcounty","Louth County Library",0],["epukapuka","Lower North Island",1],["loyola","Loyola University of Chicago",0],["lubbock","Lubbock Public Library",0],["lunacc","Luna Community College",0],["lamp","Luso-Africa Mission Partners International",0],["lwsblibrary","LWSB Library",0],["tbe","Lyle & Diane Victor E-Library (PML Temple Beth El)",0],["mpl","Macao Public Library",0],["machida-library","Machida City Library",0],["mackayqld","Mackay Libraries",0],["maderacommunitycollege","Madera Community College",0],["maderalibrary","Madera County Library",0],["mcls","Madison County Library System",0],["library-maebashi","Maebashi City Library",0],["mahwahlibrary","Mahwah Public Library",0],["mainestate","Maine State Law Library",0],["mainehealthlrc","MaineHealth",0],["maltalibraries","Malta Libraries",0],["manassasva","Manassas Park City Library",0],["mymanatee","Manatee County Public Library System",0],["manchestergb","Manchester Public Library",0],["msmnyc","Manhattan School of Music",0],["manno","Manno Town Library",0],["mapuaulibrary","Mapua University",0],["maribyrnong","Maribyrnong Library Services",0],["marinsheriff","Marin County Sheriff's Office",0],["lomc","Marine Corps University",0],["marineinstitute","Marine Institute",0],["marinesociety","Marine Society",0],["marinet","MARINet",1],["markham","Markham Public Library",0],["marmot","Marmot Library Network",1],["marshallcenter","Marshall Center Research Library",0],["martin","Martin County Public Library",0],["martinluther","Martin Luther College",0],["marubeni-employees-union","Marubeni Employees' Union",0],["maryandrewsau","Mary Andrews College",0],["mrspl","Mary Riley Styles Public Library",0],["marylanddcdl","Maryland Deaf Culture Digital Library",0],["maryland","Maryland's Digital Library",1],["mascomabank","Mascoma Bank",0],["mit","Massachusetts Institute of Technology",0],["mtareads","Massachusetts Teachers Association",0],["mrl","Massanutten Regional Library",0],["massbay","MassBay Community College",0],["matrade","MATRADE Business Information Centre",0],["matsuecity","Matsue City Library",0],["maynoothuni","Maynooth University",0],["mclibraries","Mayo Clinic Library",0],["mcpatientlib","Mayo Clinic Patient Library",0],["mayocountyie","Mayo County Library",0],["mbsa","MBSA Majlis Bandaraya Shah Alam",0],["mcallen","McAllen Public Library",0],["mcgill","McGill Libraries",0],["cusm","McGill University Health Centre",0],["mclennancc","McLennan Community College",0],["mcoelibrary","MCoE Donovan Research Library",0],["meathcountyie","Meath County Library",0],["milibrary","Mechanics' Institute Library",0],["mediaondemand","Media On Demand",1],["mdchildcare","MediaDo Child Care Library Demo",0],["mediathek-lahr","Mediathek Lahr",0],["medienzentrum","Medienzentrum Ostbelgien",0],["mediothek","Mediothek Krefeld",0],["medway","Medway Council",0],["melsa","MELSA: Twin Cities Metro eLibrary",1],["meltonvic","Melton Library & Learning Hub",0],["memphis","Memphis Public Libraries",0],["memurotown","Memuro Library",0],["mendocinoedu","Mendocino College",0],["mhalibrary","Mental Health and Addictions Library",0],["mherc","Mental Health Education Resource Centre",0],["mercedcountylibrary","Merced County Library",0],["mercerebooks","Mercer School",0],["meridiancc","Meridian Community College",0],["meridian","Meridian Library District",0],["virtualmerri-bek","Merri-bek Libraries",0],["mvlc","Merrimack Valley Library Consortium",1],["merthyruk","Merthyr Libraries",0],["mesalands","Mesalands Community College",0],["metrolibrary","Metro Library",0],["mln","Metro Library Network",1],["metronet","Metro Net Library Consortium",1],["mdc","Miami Dade College",0],["mdpls","Miami-Dade Public Library System",0],["mel","Michigan eLibrary (MeL) Collection",0],["msl","Microsoft Library",0],["midnorthcoast","Mid North Coast Library Service",0],["macu","Mid-America Christian University",0],["permanente","Mid-Atlantic Permanente Medical Group",0],["midcolumbialibraries","Mid-Columbia Libraries",0],["mcpl","Mid-Continent Public Library",0],["mhls","Mid-Hudson Library System",1],["mpcc","Mid-Plains Community College",0],["midyork","Mid-York Library System",1],["midcoastnsw","MidCoast Libraries",0],["middlenorth","Middle North Island",1],["mtsu","Middle Tennessee State University",0],["middlebury","Middlebury College",0],["miis","Middlebury Institute of International Studies",0],["middleburypubliclibrary","Middlebury Public Library",0],["mmlc","Mideastern Michigan Library Cooperative",1],["midvaal","Midvaal Local Municipality",0],["mlc","Midwest Collaborative for Library Services",1],["mbts","Midwestern Baptist Theological Seminary",0],["miltonkeynesuk","Milton Keynes Libraries",0],["milton","Milton Public Library",0],["lcdl","Ministry of Culture - Libraries Commission",0],["ministryed","Ministry of Education",0],["meagovin","Ministry of External Affairs",0],["mctc","Minneapolis Community and Technical College",0],["mnstate","Minnesota State University, Moorhead",0],["minocity","Mino City Library",0],["miss","Minorities in Shark Sciences",0],["minuteman","Minuteman Library Network",1],["miracosta","MiraCosta College",0],["misericordia","Misericordia University",0],["mississauga","Mississauga Library",0],["mlpebooks","Mississippi eBook Library Partnership",1],["mgccc","Mississippi Gulf Coast Community College",0],["molib2go","Missouri Libraries 2Go",1],["mslsau","Mitchell Shire Library Service",0],["miyakonojo","Miyakonojo City Library",0],["miyoshi-city","Miyoshi City Library",0],["mobius","MOBIUS Consortium",1],["mbrl","Mohammed Bin Rashid Al Maktoum Library",0],["mohave","Mohave County Library District",0],["mvls","Mohawk Valley Library System",0],["monaghanie","Monaghan County Libraries",0],["monlibvic","Monash Public Library Service",0],["monetaryau","Monetary Authority of Singapore",0],["monmouth","Monmouth County Library",0],["monmouthshire","Monmouthshire Libraries",0],["monroecarell","Monroe Carell Jr. Children’s Hospital at Vanderbilt",0],["libraryweb","Monroe County Library System",1],["keyslibraries","Monroe County Public Library",0],["monroeenergy","Monroe Energy",0],["mtstateagency","Montana State Agency Libraries",0],["montana","MontanaLibrary2Go",1],["emcfl","Monterey County Free Libraries",0],["mccfebooks","Montgomery County Correctional Facility",0],["montcolibs","Montgomery County Library District Consortium",1],["countylibrary","Montgomery County Memorial Library System",0],["mcplmd","Montgomery County Public Libraries",0],["montrealwest","Montreal West Public Library",0],["mooneevalley","Moonee Valley Libraries",0],["moore","Moore College Library",0],["mmpl","Moore Memorial Public Library",0],["mpkdigital","Moorpark City Library",0],["mvc","Moreno Valley College",0],["moretonbay","Moreton Bay Libraries",0],["morgancitylibrary","Morgan City Public Library",0],["mornpen","Mornington Peninsula Libraries",0],["morrin","Morrin Centre Library",0],["mottlibrary","Mott Community College",0],["msmc","Mount Saint Mary College",0],["mountstmarys","Mount Saint Mary's University",0],["msjcedu","Mt. San Jacinto Community College District",0],["mfo","Multinational Force and Observers",0],["multcolib","Multnomah County Library",0],["mlcstl","Municipal Library Consortium of St. Louis County",1],["murraylibrary","Murray City Library",0],["murrietalibrary","Murrieta Public Library",0],["mi","Musicians Institute of Contemporary Music Los Angeles",0],["muskingum","Muskingum County Library System",0],["mydlib","My Digital Library",0],["mykaarma","myKaarma",0],["muenchen","Münchner Stadtbibliothek",0],["muensterland","Münsterland",1],["nachikatsuuratown","Nachikatsuura Town Board of Education",0],["npl","Nacogdoches Public Library",0],["nyjlib","Namyangju-si Library",0],["ntclib","Nantong Library",0],["ntu","Nanyang Technological University",0],["naperville","Naperville Public Library",0],["narita-public-library","Narita Public Library",0],["nascar","NASCAR",0],["nashcc","Nash Community College",0],["nashville","Nashville Public Library",0],["nassau","Nassau Digital Doorway",1],["nasem","National Academy of Sciences, Engineering and Medicine",0],["realtor","National Association of REALTORS®",0],["ncltw","National Central Library",0],["ndu","National Defense University",0],["informationcenter","National Foreign Affairs Training Center (NFATC)",0],["nga","National Geospatial - Intelligence Agency GEOINT Research Library",0],["nic","National Institute of Corrections",0],["nihlibrary","National Institutes of Health Library",0],["ni","National Instruments Corporation",0],["enalis","National Library and Information System Authority",0],["sejong","National Library of Korea - Sejong",0],["bnllux","National Library of Luxembourg",0],["pnm","National Library of Malaysia",0],["npsvall","National Park Service, Valles Caldera National Preserve",0],["nationalre","National Reconnaissance Office",0],["natsecspaceinst","National Security Space Institute",0],["nato","NATO e-Library",0],["navajoco","Navajo County Library District",0],["nbme","NBME (National Board of Medical Examiners)",0],["nckids","NC Kids Digital Library",1],["nckidslevelup","NC Kids Level Up",1],["ncwlibraries","NCW Libraries",0],["nptuk","Neath Port Talbot Libraries",0],["nebraska","Nebraska OverDrive Libraries",1],["nebrwesleyan","Nebraska Wesleyan University",0],["nedbank","Nedbank",0],["neflin","NEFLIN",1],["nelnet","Nelnet",0],["neo","NEO A&M College",0],["silverstarcoop","Nevada Library Cooperative",1],["nvstatelib","Nevada State Library, Archives and Public Records",0],["nevadastate","Nevada State University",0],["newcanaanlibrary","New Canaan Library",0],["lamb","New Castle District Library Center",0],["nh","New Hampshire State Library",1],["nhfpl","New Haven Free Public Library",0],["newhope","New Hope Presbyterian Church",0],["nm","New Mexico Library To Go",1],["nmmi","New Mexico Military Institute",0],["nmsudonaana","New Mexico State University Dona Ana",0],["nobts","New Orleans Baptist Theological Seminary",0],["neworleans","New Orleans Public Library",0],["newrelic","New Relic",0],["nycf","New York Correctional Facilities (ViaPath)",1],["nypa","New York Power Authority",0],["nypl","New York Public Library",0],["nysoclib","New York Society Library",0],["nyu","New York University",0],["newcastleau","Newcastle Libraries",0],["newcastle","Newcastle University",0],["elibrary","Newfoundland & Labrador Public Libraries",0],["newportuk","Newport City Council",0],["nnpls","Newport News Public Library System",0],["newschoolarch","Newschool of Architecture and Design",0],["ngeeannsg","Ngee Ann Polytechnic",0],["notlpubliclibrary","Niagara-on-the-Lake Public Library",0],["nmls","Nicholson Memorial Library System",0],["niederrhein","Niederrhein",1],["niedersachsen","Niedersachsen",1],["nihpatientlibrary","NIH Patient Library",0],["nikken-cm","Nikken Sekkei Construction Management",0],["nilrc","NILRC Academic Shared Digital Collection",1],["nblib","Ningbo Library (宁波图书馆)",0],["nioga","Nioga Library System",1],["lib-mugicom","Nisshin Seifun Labor Union",0],["nlb","NLB",0],["noaalibs","NOAA Library Network",0],["noble","NOBLE: North of Boston Library Exchange",1],["noda-city","Noda Public Library",0],["noosaqld","Noosa Library Service",0],["nordleihe","Nordleihe",1],["nsftlibrary","Norfolk and Suffolk NHS Foundation Trust",0],["norfolk","Norfolk County Council",0],["norfolk-va","Norfolk Public Library",0],["lbbl-nsu","Norfolk State University",0],["nortal","Nortal",0],["ncarolinadoc","North Carolina Department of Corrections",0],["ncdigital","North Carolina Digital Library",1],["ced","North Carolina State University - College of Education",0],["northcoast","North Coast Library Cooperative",0],["northcountrylibraries","North Country Library System",1],["ndac","North Dakota Academic Consortium",1],["ndlibrary2go","North Dakota Digital Consortium",1],["ndscs","North Dakota State College of Science",0],["nescotlandco","North East Scotland College",0],["nlacrc","North Los Angeles County Regional Center",0],["northmankato","North Mankato Taylor Library",0],["northmiami","North Miami Public Library",0],["nsdc","North Suburban Digital Consortium",1],["indietexas","North Texas Independent Digital Consortium",1],["ntrls","North Texas Libraries on the Go",1],["nwslc","North Warwickshire and South Leicestershire College",0],["northwestlib","North West Provincial Library Services",0],["northyorks","North Yorkshire Libraries",0],["north-west","North-West University",0],["nacc","Northeast Alabama Community College",0],["northeastcc","Northeast Community College",0],["nicc","Northeast Iowa Community College",0],["nlclibrary","Northeast Lakeview College",0],["nemcc","Northeast Mississippi Community College",0],["nepadl","Northeast Pennsylvania Digital Library",1],["northeaststate","Northeast State Community College",0],["netldc","Northeast Texas Digital Consortium",1],["northeasternuni","Northeastern University",0],["northernbeacheslibraries","Northern Beaches Libraries",0],["ncdl","Northern California Digital Library",1],["northerncape","Northern Cape Provincial Library Service",0],["northernlthlth","Northern Light Eastern Maine Medical Center",0],["nnyoverdrive","Northern New York Library Network",1],["novac","Northern Virginia Astronomy Club - NOVAC",0],["northnet","NorthNet Library System",1],["northumbrianhs","Northumbria Healthcare NHS Foundation Trust",0],["northumbriauni","Northumbria University",0],["nwacc","NorthWest Arkansas Community College",0],["ngrls","Northwest Georgia Regional Library System",0],["nwscc","Northwest Shoals Community College",0],["nwt","Northwest Territories Public Libraries",0],["nu","Northwest University",0],["nvclibrary","Northwest Vista College",0],["nuqlibrary","Northwestern University in Qatar",0],["norwalk","Norwalk Public Library",0],["norwegian","Norwegian Cruise Line Holdings Ltd.",0],["norwich","Norwich University",0],["nottinghamcity","Nottingham City Libraries",0],["nottingham","Nottingham Trent University",0],["nottinghamshire","Nottinghamshire Libraries",0],["nscc","Nova Scotia Community College",0],["nswrfs","NSW Rural Fire Service",0],["ntlotgmagazines","NTLOTG Magazines",1],["nucorindiana","Nucor Steel Indiana",0],["ocfs","NYS Office of Children and Family Services",0],["orpl","Oak Ridge Public Library",0],["oakland","Oakland Public Library",0],["cplopc","Obama Presidential Center Collection (CPL)",0],["landesbibliothek","Oberösterreichische Landesbibliothek Linz",0],["obihirocity","Obihiro City Library",0],["ocpl","OC Public Libraries",0],["ocas","OCAS",0],["oceancity","Ocean City Free Public Library",0],["ocean","Ocean County College",0],["ocl","Ocean County Library",0],["riezone","Ocean State Libraries eZone",1],["ochsner","Ochsner Medical Library",0],["odessacollege","Odessa College",0],["offalycountyie","Offaly County Library",0],["opw","Office of Public Works Ireland",0],["auditorcanada","Office of the Auditor General of Canada",0],["knowledgenet","Office of the Controller & Auditor-General",0],["oglalalakota","Oglala Lakota College",0],["drcohio","Ohio Department of Rehabilitation and Corrections",0],["pdst","Oide",0],["oilcreek","Oil Creek Library District",0],["okvirtuallibrary","OK Virtual Library",1],["okanagan","Okanagan College",0],["orl","Okanagan Regional Library",0],["occc","Oklahoma City Community College",0],["odl","Oklahoma Department of Libraries",0],["opsu","Oklahoma Panhandle State University",0],["ocln","Old Colony Library Network",1],["olivebaptist","Olive Baptist Church Library",0],["omaha","Omaha Public Library",0],["onchan","Onchan Public Library",0],["omnilibraries","Online Media of Northern Illinois Libraries",1],["onomichi-city","Onomichi City Library",0],["onlib","Onondaga County Public Library",0],["odmc","Ontario Library Service Consortium",1],["ontarioshores","Ontario Shores Centre for Mental Health Sciences",0],["ocls","Orange County Library System",0],["ocnc","Orange County Public Library",0],["library2go","Oregon Digital Library Consortium",1],["orparc","Oregon Post Adoption Resource Center",0],["oregonstate","Oregon State University",0],["researchautism","Organization for Autism Research (OAR)",0],["ori-library","Orient Research Institute Digital Documentation Center",0],["nationalcorrectionslibrary","Orijin",0],["orlandparklibrary","Orland Park Public Library",0],["orlandohealth","Orlando Health",0],["osceolalibrary","Osceola Library System",0],["deichman","Oslo Public Library",0],["otofuke-library","Otofuke Town Library",0],["ottawa","Ottawa Public Library",0],["ottawaksedu","Ottawa University Kansas",0],["ourdlib","Our Digital Library",1],["seatofwisdom","Our Lady Seat of Wisdom College",0],["academicdemo","OverDrive Academic & Professional",0],["odapidemo","OverDrive API Demo Library",0],["overdriveapi","OverDrive API Integration Library",0],["bw","Overdrive Baden-Württemberg",1],["chinademo","OverDrive China Demo",0],["odclassics","OverDrive Classics Library",0],["collegedemo","OverDrive College Demo",0],["corporateod","OverDrive Corporate Demo",0],["canaryowl","OverDrive Demo  - Canary (Owl)",0],["democa","OverDrive Demo - Canada",0],["crane","OverDrive Demo - Canary (Crane)",0],["canarylightning","OverDrive Demo - Canary (Finch)",0],["canaryflamingo","OverDrive Demo - Canary (Flamingo)",0],["magpie","OverDrive Demo - Canary (Magpie)",1],["canarysdl","OverDrive Demo - Canary (School)",0],["canarysearch","OverDrive Demo - Canary (Search)",1],["canaryuni","OverDrive Demo - Canary (University)",0],["audemosite","OverDrive DLR Demo",0],["koreandemo","OverDrive DLR Demo - Korea",0],["omia","OverDrive for Michigan & Indiana Academics",1],["uskindle","OverDrive Kindle Demo",0],["overdrivegerman","OverDrive Library Demo Germany",0],["latamlib","OverDrive Library Marketplace Demo - Colombia (CO)",0],["singaporedemo","OverDrive Library Marketplace Demo - Singapore",0],["ukdemo","OverDrive Library Marketplace Demo - United Kingdom (UK)",0],["odnonprofit","OverDrive Nonprofit demo",0],["pro","OverDrive Professional",0],["rlp","OverDrive Rheinland-Pfalz",1],["overdrivesweden","OverDrive Sweden",0],["odteam","OverDrive Team Library",0],["franken","OverDrive Verbund Franken",1],["world","OverDrive World",0],["owl","OWL",1],["owwl","OWWL Library System",1],["oandc","Oxford and Cambridge Club",0],["oxfordshire","Oxfordshire County Council",0],["oxnard","Oxnard Public Library",0],["pa-academic","PA Academic Libby Consortium",1],["pucedu","Pacific Union College",0],["pajulib","Paju Hanbit Library",0],["palmdesert","Palm Desert Library",0],["palmspringslibrary","Palm Springs Public Library",0],["palmerdonavin","Palmer-Donavin",0],["palmetto","Palmetto Library Consortium",1],["paclibrary","Palo Alto College",0],["palomar","Palomar College",0],["pvld","Palos Verdes Library District",0],["palsplus","PALS Plus NJ OverDrive Library",1],["pamunkeyva","Pamunkey Regional Jail",0],["prl","Pamunkey Regional Library",0],["panhandle","Panhandle Library Access Network",1],["pariveda","Pariveda Solutions",0],["prls","Parkland Regional Library",0],["pasadena","Pasadena Public Library",0],["pascal","PASCAL Consortium",1],["paytel","Pay Tel Communications, Inc.",0],["paytelmaga","Pay Tel Magazines",0],["pstcc","Pellissippi State Community College",0],["pembrokeshire","Pembrokeshire Libraries",0],["penang","Penang Digital Library",0],["pls","Peninsula Library System",1],["pacf","Pennsylvania Correctional Facilities",0],["pit","Pennsylvania Institute of Technology",0],["pennstateu","Pennsylvania State University",0],["penrith","Penrith City Library",0],["pentagonlib","Pentagon Library",0],["pepperdine","Pepperdine University Libraries",0],["ppas","Perbadanan Perpustakaan Awam Selangor",0],["librarybrunei","Perpustakaan Dewan Bahasa dan Pustaka Brunei",0],["ptbolibrary","Peterborough Public Library",0],["pettes","Pettes Memorial Library",0],["pfeiffer","Pfeiffer University",0],["pflagca","PFLAG Canada",0],["philanthropysoutheast","Philanthropy Southeast",0],["phillipsburgnj","Phillipsburg Free Public Library",0],["pickens","Pickens County Library System",0],["piercecollege","Pierce College at Puyallup",0],["piercecounty","Pierce County Library System",0],["ppld","Pikes Peak Library District",0],["pillar","Pillar Libraries",1],["pilothouse","Pilot House Associates, LLC",0],["pimacc","Pima Community College",0],["pima","Pima County Public Library",0],["pplc","Pinellas Public Library Cooperative",1],["pwdl","Piney Woods Digital Consortium",1],["pinnacle","Pinnacle Digital Consortium",1],["pioneerok","Pioneer Library System",0],["pioneerok-pilot","Pioneer Library System Public Access Collection",0],["pioneerland","Pioneerland Library System",0],["plano","Plano Public Library System",0],["templatecorp","Platform Template - Corporate",0],["templatelib","Platform Template - Public Library",0],["plumcreeklibrary","Plum Creek Library System",0],["pokagon","Pokagon Tribal Library",0],["politecnicojic","Politécnico Colombiano Jaime Isaza Cadavid",0],["pclc","Polk County Library Cooperative",1],["pomonaca","Pomona Public Library",0],["javeriana","Pontificia Universidad Javeriana",0],["portphillip","Port Phillip Library Service",0],["portagelibrary","Portage County District Library",0],["pcc","Portland Community College",0],["poudre","Poudre River Public Library District",0],["powerlibrary","POWER Library",0],["powysuk","Powys County Council",0],["prairiestate","Prairie State College",0],["pnks","Presbytery of Northern Kansas",0],["peipls","Prince Edward Island Public Library Service",0],["pgcmls","Prince George's County Memorial Library System",0],["princememorial","Prince Memorial Library",0],["mbsc","Prince Mohammed Bin Salman College",0],["princewilliam","Prince William Public Libraries",0],["princetonlibrary","Princeton Public Library",0],["princeton","Princeton University",0],["pmml","Pritzker Military Museum & Library",0],["privycouncil","Privy Council Office / Government of Canada",0],["pglibrary","Procter & Gamble Library",0],["providence","Providence College",0],["psychiatrie-sg","Psychiatrie St.Gallen",0],["cabq","Public Library Albuquerque and Bernalillo County",0],["interlinklibraries","Public Library InterLINK - Restricted to Print Disabled Patrons",0],["virginislands","Public Library Services of the Virgin Islands",0],["pueblolibrary","Pueblo City-County Library District",0],["pugetsound","Puget Sound Partnership",0],["purduemain","Purdue University-Main Campus",0],["qa","QA Integration Site",1],["qnl","Qatar National Library",0],["qualtrics","Qualtrics",0],["quatrefoil","Quatrefoil Library",0],["queenslibrary","Queens Public Library",0],["qroc","Queensland Regional OverDrive Consortium",1],["queerliblib","Queer Liberation Library",0],["rafbokasafnid","Rafbókasafnið",1],["rakutenlibrary","Rakuten",0],["rcls","Ramapo Catskill Library System",1],["rml","Rancho Mirage Public Library",0],["randolphcollege","Randolph College",0],["randolph","Randolph County Public Library",0],["randwick","Randwick City Library Services",0],["anythinklibraries","Rangeview Library District",0],["rapid7","Rapid7",0],["rpl","Rapides Parish Library",0],["rclgroup","RCL Foods Corporate Library",0],["rcmplrc","RCMP Learning Resource Centre",0],["rcsi-mub","RCSI- Medical University of Bahrain",0],["readfreely","Read Freely with Los Angeles Public Library",0],["readingarizona","Reading Arizona",0],["reading","Reading District Libraries",0],["readinguk","Reading Libraries",0],["bibliotecascomfenalcoantioquia","Red de Bibliotecas de CCF Comfenalco Antioquia",0],["rdpl","Red Deer Public Library",0],["reddit","Reddit",0],["redlandqld","Redland City Library Service",0],["rbpl","Redondo Beach Public Library",0],["reedley","Reedley College",0],["regionwaterloo","Region of Waterloo - Employees Only",0],["reichmanuni","Reichman University",0],["rpidrs","Religionspädagogische Institute der Diözese Rottenburg-Stuttgart",0],["riti","Remote Imagery Technologies, Inc.",0],["renfrewshire","Renfrewshire Libraries",0],["renovationchrch","Renovation Church",0],["rensselearccf","Rensselear County NY",0],["resixperts","ResiXperts",0],["revolib","Revolib",0],["reynoldslibraries","Reynolds Community College",0],["ric","Rhode Island College",0],["ricepubliclibrary","Rice Public Library",0],["richardson","Richardson Public Library",0],["myrl","Richland Library",0],["crlnsw","Richmond and Clarence Libraries",1],["rhpl","Richmond Hill Public Library",0],["richmondpubliclibrary","Richmond Public Library",0],["yourlibraryca","Richmond Public Library",0],["richmondlibrary","Richmond Public Library",0],["rtrlnsw","Richmond Tweed Regional Library",0],["riopl","Rio Rancho Public Library",0],["rivershareacademic","RiverShare Academic Libraries",1],["rivershare","RiverShare Libraries",1],["rivlib","Riverside County Library System",0],["riverside","Riverside Public Library",0],["riversidejail","Riverside Regional Jail",0],["rscc","Roane State Community College",0],["rvl","Roanoke Valley Libraries",1],["roberts","Roberts Wesleyan College & Northeastern Seminary",0],["robleyrex","Robley Rex VA Medical Center",0],["rctc","Rochester Community and Technical College",0],["rochester","Rochester Public Library",0],["rocket","Rocket Companies",0],["rsulibraries","Rogers State University",0],["rokosservicesuk","Rokos Capital Management",0],["rpls","Rolling Prairie Digital Consortium",1],["rollins","Rollins College",0],["roscommonie","Roscommon County Library",0],["roundrock","Round Rock Public Library System",0],["rbwm","Royal Borough of Windsor & Maidenhead",0],["royalart","Royal College of Art",0],["royaldevon","Royal Devon University Healthcare NHS Foundation Trust",0],["rmit","Royal Melbourne Institute of Technology (RMIT)",0],["rmccanada","Royal Military College of Canada",0],["rmcsj","Royal Military College Saint-Jean",0],["royalroadsae","Royal Roads University- UAE",0],["rsmuk","RSM UK",0],["russellsage","Russell Sage College",0],["rutlanduk","Rutland Library Service",0],["sabah","Sabah State Library",0],["saclibrary","Sacramento Public Library",0],["sacredheart","Sacred Heart University",0],["sails","SAILS Library Network",1],["saintanselm","Saint Anselm College",0],["smcvt","Saint Michael's College",0],["bibstlaz","Saint-Lazare Library",0],["sakuradigital-library","Sakura City Library",0],["salinaspubliclibrary","Salinas Public Library",0],["slcpl","Salt Lake City Public Library",0],["slco","Salt Lake County Library Services",0],["samepage","Same Page Libraries",1],["samishnation","Samish Indian Nation",0],["sanantonio","San Antonio Public Library",0],["sbcldigital","San Bernardino County Library",0],["sbpl","San Bernardino Public Library",0],["sandiegochristian","San Diego Christian College",0],["sdcl","San Diego County Library",0],["sfpl","San Francisco Public Library",0],["sanjose","San Jose Public Library",0],["ebookssjclibrary","San Juan Community Library",0],["sanleandrolibrary","San Leandro Public Library",0],["bibliotecasanpedro","San Pedro Garza Garcia",0],["srlsinfo","Sandhill Regional Library System",0],["sandiagov","Sandia National Laboratories",0],["sandoval","Sandoval County Library Consortium",1],["sanibel","Sanibel Public Library",0],["sanjo-digital-lib","Sanjo City Library",0],["santaanapubliclibrary","Santa Ana Public Library",0],["santabarbara","Santa Barbara Public Library",0],["santaclara","Santa Clara County Library",0],["sfcollege","Santa Fe College",0],["sanfe","Santa Fe Public Library",0],["santamonica","Santa Monica Public Library",0],["santarosa","Santa Rosa County Library System",0],["srjc","Santa Rosa Junior College",0],["sasinstitute","SAS Institute Inc.",0],["saskatchewan","Saskatchewan Library Consortium",1],["saxtonblittle","Saxton B. Little Free Library",0],["scarborough","Scarborough Public Library",0],["scenicregional","Scenic Regional Library",0],["scpl","Schenectady County Public Library",0],["scottishgov","Scottish Government Library & Information Service",0],["sdlplayground","SDL: Playground",0],["seagirtnj","Sea Girt Public Library",0],["spl","Seattle Public Library",0],["sekicity","Seki City Library",0],["sellersdorsey","Sellers Dorsey and Associates",0],["ssw","Seminary of the Southwest",0],["semcofl","Seminole County Public Library System",0],["seminolestate","Seminole State College of Florida",0],["senecalibraries","Seneca District Libraries",1],["seocholib","Seocho Library",0],["seoullib","Seoul Metropolitan Library",0],["senlib","Seoul Metropolitan Office of Education Digital Library",0],["sequoyah","Sequoyah Regional Library System",0],["serra","Serra Cooperative Library System",1],["seynatlib","Seychelles National Library",0],["sumclibrary","Shandon United Methodist Church",0],["sst","Shanghai Children's Library (上海少年儿童图书馆)",0],["sh","Shanghai Library (上海图书馆)",0],["xhlib","Shanghai Xuhui District Library",0],["sharjah","Sharjah Public Library",0],["sheffielduk","Sheffield Libraries",0],["sz","Shenzhen Library (深圳图书馆)",1],["sheppardnc","Sheppard Memorial Library",0],["shetlanduk","Shetland Library",0],["idobata-library","Shinkawa Electric Co., Ltd. (Idobata Digital Library)",0],["shioya-town-lib","Shioya Town Library",0],["campaspe","Shire of Campaspe",0],["shorelinknsw","Shorelink Library Network",0],["shortercollege","Shorter College",0],["shortgrass","Shortgrass Library System",0],["showavill","Showa Village Community Center Library",0],["shure","Shure Incorporated",0],["sclib","Sichuan Library",0],["sinaihealth","Sinai Health",0],["sp","Singapore Polytechnic",0],["sxmlibrary","Sint Maarten Library",0],["siouxlndsd","Siouxland Libraries",0],["sjplatsjc","SJPL at SJC",0],["skepsislegal","Skepsis Legal Solutions PLLC",0],["skidmore","Skidmore College",0],["ssg-wsg","Skills & Workforce Development Agency",0],["skokielibrary","Skokie Public Library",0],["skyboxlabs","SkyBox Labs",0],["skylinecollege","Skyline College",0],["sligocountyie","Sligo County Council",0],["svld","Smoky Valley Library District",0],["sno-isle","Sno-Isle Libraries",0],["snowedu","Snow College",0],["societeradiocanada","Societe Radio-Canada",0],["socoe","SOCOE - Special Operations Center of Excellence (USAJFKSWCS)",0],["softlinkco","Softlink Corporate Demo",0],["solanocc","Solano Community College",0],["solano","Solano County Library",0],["solna","Solna Stadsbibliotek",0],["somersetcc","Somerset Community College",0],["somerset","Somerset County Library System of New Jersey",0],["soneva","Soneva",0],["yspubliclib","Songdo International Children's Library",0],["ssllib","Songshan Lake Library",0],["sonoma","Sonoma County Library",1],["allaccess-sora","Sora Subscriptions",0],["southafricadlr","South Africa Library Demo",0],["salb","South African Library for the Blind",0],["sapln","South Australian Public Library Network",1],["south-ayrshire","South Ayrshire Libraries",0],["southdakota","South Dakota Digital Consortium",1],["sdprevention","South Dakota Prevention Resource Centers",0],["sdsmt","South Dakota School of Mines and Technology",0],["southdublinie","South Dublin Libraries",0],["sedigitallibraries","South East Digital Libraries",1],["southisland","South Island",1],["sjrlc","South Jersey Regional Library Cooperative",1],["srtafe","South Regional TAFE",0],["southtexascollege","South Texas College",0],["southtexas","South Texas Library System",1],["southtyneside","South Tyneside Libraries",0],["poetrylibrary","Southbank Centre",0],["seadl","Southeast Alabama Digital Library",1],["sefl-municipal","Southeast Florida Library Association",1],["senmc","Southeast New Mexico College",0],["southeasternok","Southeast Oklahoma Library System",0],["southeasterncc","Southeastern Community College",0],["selco","Southeastern Libraries Cooperating",1],["southendonseauk","Southend-on-Sea Libraries",0],["salon","Southern Adirondack Library System",1],["southernaku","Southern Arkansas University Main Campus",0],["scdl","Southern California Digital Library",1],["sdrcqld","Southern Downs Regional Council",0],["snhu","Southern New Hampshire University",0],["stls","Southern Tier Library System",1],["sovalue","Southern Virginia Libraries United Electronically",1],["southwestfl","Southwest Florida Library Network",1],["waggin","Southwest Library District",1],["smdl","Southwest Michigan Digital Library",1],["swri","Southwest Research Institute",0],["swtcc","Southwest Tennessee Community College",0],["svlc","Southwest Valley Library Consortium",1],["swvapub","Southwest Virginia Public Libraries",1],["swosu","Southwestern Oklahoma State University",0],["sparrowscollege","Sparrows College",0],["spartanburglibraries","Spartanburg County Public Libraries",0],["scld","Spokane County Library District",0],["spokanelibrary","Spokane Public Library",0],["springfield","Springfield-Greene County Library",0],["trinity","St Francis College",0],["sjc","St James' Church, Singapore",0],["sapl","St. Albert Public Library",0],["stkate","St. Catherine University",0],["stcharles","St. Charles City-County Library District",0],["stclaircounty","St. Clair County Library System",0],["stedwards","St. Edward's University",0],["sjcpls","St. Johns County Public Library",0],["sjrstate","St. Johns River State College",0],["stjohnslaw","St. John’s University School of Law",0],["sjcpl","St. Joseph County Public Library",0],["slcl","St. Louis County Library",0],["slpl","St. Louis Public Library",0],["stlucieco","St. Lucie County Library System",0],["stlukeshealth","St. Luke's Health System",0],["sttammany","St. Tammany Parish Library",0],["stackoverflow","Stack Overflow",0],["dortmund","Stadt- und Landesbibliothek Dortmund",0],["braunschweig","Stadtbibliothek Braunschweig",0],["bremen","Stadtbibliothek Bremen",0],["duisburg","Stadtbibliothek Duisburg",0],["freiburg","Stadtbibliothek Freiburg",0],["stadtbibliothek-graz","Stadtbibliothek Graz",0],["halle","Stadtbibliothek Halle",0],["eausleihe-hannover","Stadtbibliothek Hannover",0],["innsbruck","Stadtbibliothek Innsbruck",0],["karlsruhe","Stadtbibliothek Karlsruhe",0],["koeln","Stadtbibliothek Köln",0],["mannheim","Stadtbibliothek Mannheim",0],["oldenburg","Stadtbibliothek Oldenburg",0],["osnabrueck","Stadtbibliothek Osnabrück",0],["paderborn","Stadtbibliothek Paderborn",0],["pforzheim","Stadtbibliothek Pforzheim",0],["stadtbibliotheksalzburg","Stadtbibliothek Salzburg",0],["stadtbuechereistp","Stadtbibliothek St. Pölten",0],["stuttgart","Stadtbibliothek Stuttgart",0],["wuppertal","Stadtbibliothek Wuppertal",0],["augsburg","Stadtbücherei Augsburg",0],["biberach","Stadtbücherei Biberach",0],["soest","Stadtbücherei Soest",0],["duesseldorf","Stadtbüchereien Düsseldorf",0],["standardbankza","Standard Bank Group Limited",0],["stanfordchildrens","Stanford Medicine Children's Health",0],["stanford","Stanford University",0],["stanislauslibrary","Stanislaus County Library",0],["starfinancial","STAR Financial Bank",0],["startingpoint","Starting Point",0],["staterbros","Stater Bros. Markets",0],["jerseylibrary","States of Jersey",0],["statcan","Statistics Canada",0],["stella-jones","Stella-Jones Inc.",0],["stellantis-fs","Stellantis Financial Services, Inc",0],["sfasu","Stephen F Austin State University",0],["stetson","Stetson University",0],["stirlinguk","Stirling Libraries",0],["stockton","Stockton University",0],["e-stockton","Stockton-on-Tees Libraries",0],["ssjcpl","Stockton-San Joaquin County Public Library",0],["stokeontrentuk","Stoke-on-Trent Libraries",0],["stonington","Stonington Free Library",0],["straffordnh-gtl","Strafford County Correctional",0],["stratford","Stratford Library Association",0],["sclibrary","Strathcona County Library",1],["strangnas","Strängnäs bibliotek",0],["surly","Student Union Recreational Library, SURLY MSA",0],["slc","Suburban Library Cooperative",1],["suffolklibraries","Suffolk Community Libraries",0],["suffolkva","Suffolk Public Library System",0],["sqcc","Sultan Qaboos Cultural Center",0],["sumitomo-corporation-labor-union","Sumitomo Corporation Labour Union",0],["scw","Sun City West - R. H. Johnson Library",0],["sunflowerelibrary","Sunflower eLibrary",1],["sunnyvale","Sunnyvale Public Library",0],["scl","Sunshine Coast Libraries",0],["sunywcc","SUNY Westchester Community College",0],["segurossura","SURA",0],["surreyca","Surrey Libraries",0],["surreycountyuk","Surrey Libraries",0],["city-susaki","Susaki City Library",0],["sutherland","Sutherland Shire Council",0],["szlib","Suzhou Library (苏州图书馆)",0],["swanseauk","Swansea Libraries",0],["swarthmore","Swarthmore College Libraries",0],["swisseducation","Swiss Education Group",0],["smsa","Sydney Mechanics' School of Arts",0],["stavanger","Sølvberget bibliotek og kulturhus",0],["tacoma","Tacoma Public Library",0],["tafensw","TAFE NSW",0],["tafeqld","TAFE Queensland",0],["taipei","Taipei Public Library",0],["talc","TALC – Texas Academic Library Consortium",1],["talcott","Talcott Financial Group",0],["saverylibrary","Talladega College",0],["tallinnaraamatukogud","Tallinn Libraries",0],["tbc-elibrary","Tallowood Baptist Church Library",0],["tamaki-town-library","Tamaki Town Library",0],["tblc","Tampa Bay Library Consortium",1],["tanglinclub","Tanglin Club",0],["tbldc","Tarrant County Churches Digital Consortium",1],["tarrantccd","Tarrant County College District",0],["luts","Tartu Oskar Lutsu nimeline Linnaraamatukogu",0],["tateyama-city","Tateyama Municipal Library",0],["tawazuncouncil","Tawazun Council for Defence Enablement",0],["tcmi","TCM International Institute",0],["tcs","TCS Education System",0],["tdem","TDEM - Texas Division of Emergency Management",0],["teachingbookswi","Teaching Books",0],["bibthm","Technische Hochschule Mittelhessen (THM)",0],["tells","TELLS Library",0],["tempe","Tempe Public Library",0],["emanuelnyc","Temple Emanu-El",0],["templeemanuel","Temple Emanuel",0],["shalom","Temple Rodef Shalom",0],["templesinai","Temple Sinai",0],["templesinaidc","Temple Sinai Library",0],["tenn-share","Tenn-Share Academic",1],["reads","Tennessee READS",1],["tnstate","Tennessee State University",0],["flybrary","TEP Rocky Mountain",0],["tamus","Texas A&M University System Libraries",1],["tsc","Texas Southmost College",0],["tstclib","Texas State Technical College",0],["txstate","Texas State University-San Marcos",0],["twu","Texas Woman's University",0],["tkpark","Thailand Knowledge Park",0],["aialouisiana","The American Institute of Architects Louisiana  AIA Louisiana",0],["aup","The American University of Paris",0],["tafl","The Anglo Foundation Library",0],["blackstonefoundationlibrary","The Blackstone Foundation Library",0],["thebuddhistsociety","The Buddhist Society",0],["cuhksz","The Chinese University of Hong Kong, Shenzhen",0],["ccbcmd","The Community College of Baltimore County",0],["thedtl","The Digital Theological Library",0],["eastindiaclub","The East India Club",0],["stamford","The Ferguson Library",0],["thefhm","The Florida Holocaust Museum",0],["freelibrary","The Free Library of Philadelphia",0],["georgehull","The George Hull Centre",0],["thehills","The Hills Library Service",0],["janestern","The Jane Stern Dorado Community Library",0],["jf","The Japan Foundation",0],["tlc","The Libraries Consortium",1],["londonlibrary","The London Library",0],["melbourneathenaeum","The Melbourne Athenaeum Library",0],["mercantile","The Mercantile Library",0],["nlsa","The National Library of South Africa",0],["ww2museum","The National WWII Museum Hilliard Research Library",0],["ohdbks","The Ohio Digital Library",1],["open","The Open University",0],["youngstown","The Public Library of Youngstown and Mahoning County",0],["rwjf","The Robert Wood Johnson Foundation",0],["rhslibraries","The Royal Horticultural Society",0],["rsaa","The Royal Society for Asian Affairs",0],["seafarerslibrary","The Seafarer's Library",0],["sheffieldcollegelrc","The Sheffield College",0],["theshepherds","The Shepherd's Church",0],["ticketmaster","The Stacks at Ticketmaster",0],["thetradedesk","The Trade Desk",0],["ucny","The University Club of New York",0],["essexuni","The University of Essex",0],["universitylaw","The University of Law",0],["umanchester","The University of Manchester",0],["utchattanooga","The University of Tennessee, Chattanooga",0],["mdanderson","The University of Texas MD Anderson Cancer Center",0],["weizmann","The Weizmann Institute of Science",0],["westportlibrary","The Westport Library",0],["yaleclub","The Yale Club of New York City",0],["tolibrary","Thousand Oaks Library",0],["tibet","Tibet Library",0],["tiffinuniversity","Tiffin University",0],["timberland","Timberland Regional Library",0],["tjxca","TJX Canada",0],["tmeic","TMEIC",0],["tochigi","Tochigi City Library",0],["tocc","Tohono O'odham Community College",0],["tokyoamericanclub","Tokyo American Club",0],["toledo","Toledo Lucas County Public Library",0],["tgclibrary","Tom Green County Library System",0],["toowoombaqld","Toowoomba Region Libraries",0],["tscpl","Topeka and Shawnee County Public Library",0],["torfaenuk","Torfaen County Borough Library",0],["toronto","Toronto Public Library",0],["torrance","Torrance Public Library",0],["townandcountry","Town and Country Club",0],["townsvilleqld","Townsville Library Service",0],["ttdc-etosyo","Toyota Technical Development Corporation",0],["trac","TRAC Consortium",1],["tradoc","TRADOC Headquarters Library",0],["tadl","Traverse Area District Library",0],["tds","Traverse des Sioux Library Cooperative",1],["tricountycc","Tri-County Community College",0],["triparish","Tri-Parish E-Library",1],["tbcraleigh","Trinity Baptist Church - Raleigh",0],["tvcc","Trinity Valley Community College",0],["trinitylibrary","Trinity Washington University",0],["twuca","Trinity Western University",0],["troyedu","Troy University",0],["truist","Truist",0],["trondelag","Trøndelag",0],["tsuyama-area","Tsuyama Area Digital Library",0],["tulaneedu","Tulane University Libraries",0],["tularecounty","Tulare County Library",0],["tulsa","Tulsa City-County Library",0],["tulsacc","Tulsa Community College",0],["tlkycsca","Tung Lin Kok Yuen, Canada Society",0],["tuscaloosa","Tuscaloosa Public Library",0],["usawc","U.S. Army War College",0],["state","U.S. Department of State",0],["usturkmenistan","U.S. Embassy Ashgabat",0],["ebooksusa","U.S. Embassy Berlin",0],["usfooddrug","U.S. Food and Drug Administration – OIFSSP",0],["ogc","U.S. House of Representatives Office of General Counsel",0],["usmma","U.S. Merchant Marine Academy",0],["uberfreight","Uber Freight",0],["uwlib","Uiwang City Library",0],["ujicity-library","Uji City Library",0],["ukparliament","UK Parliament",0],["umgeniwater","uMngeni-uThukela Water",0],["umpqua","Umpqua Community College",0],["unily","Unily Group Limited",0],["unioncounty","Union County Library",0],["unionleaguephl","Union League of Philadelphia",0],["upsem","Union Presbyterian Seminary",0],["wfp","United Nations World Food Programme",0],["secretservice","United States Secret Service",0],["ubt","Universal Business Team (UBT)",0],["uai","Universidad Adolfo Ibañez",0],["uan","Universidad Antonio Nariño",0],["bidiuam","Universidad Autonoma Metropolitana",0],["crai-uautonoma","Universidad Autónoma de Chile",0],["bibliotecauao","Universidad Autónoma de Occidente",0],["ucenfotec","Universidad Cenfotec",0],["bibliotecafundadores","Universidad CES",0],["udea","Universidad De Antioquia",0],["utadeo","Universidad de Bogota Jorge Tadeo Lozano",0],["bibliounicosta","Universidad de la Costa",0],["unisabana","Universidad de la Sabana",0],["unisalle","Universidad de la Salle",0],["uniandes","Universidad de los Andes",0],["bibliotecadigitaludem","Universidad de Medellin",0],["bibliotecaudem","Universidad de Monterrey",0],["unav","Universidad de Navarra",0],["uoh","Universidad de O'Higgins",0],["bibliotecausbcali","Universidad de San Buenaventura Cali",0],["uninorteco","Universidad del Norte",0],["unipacifico","Universidad del Pacifico",0],["eafit","Universidad EAFIT",0],["bibliotecaean","Universidad EAN",0],["eia","Universidad EIA",0],["icesi","Universidad ICESI",0],["uis","Universidad Industrial de Santander",0],["ugc","Universidad La Gran Colombia",0],["umng","Universidad Militar",0],["bibliotecasunal","Universidad Nacional de Colombia",0],["upb","Universidad Pontificia Bolivariana",0],["unisimon","Universidad Simón Bolívar",0],["ucn","University College of the North",0],["uhnpatient","University Health Network",0],["uhhospitals","University Hospitals",0],["carolina","University Library at the University of North Carolina at Chapel Hill",0],["uakron","University of Akron",0],["arizonaedu","University of Arizona",0],["uarkansas","University of Arkansas",0],["uaptc","University of Arkansas - Pulaski Technical College",0],["bristoluni","University of Bristol",0],["ucb","University of California Berkeley",0],["ucirvinemain","University of California Irvine",0],["ucr","University of California, Riverside",0],["ucla","University of California-Los Angeles",0],["ucsflibrary","University of California-San Francisco",0],["ucmmo","University of Central Missouri",0],["ucwv","University of Charleston",0],["chesteruni","University of Chester",0],["ucasslib","University of Chinese Academy of Social Sciences Library",0],["cuboulder","University of Colorado Boulder",0],["udel","University of Delaware",0],["du","University of Denver",0],["uniedinburgh","University of Edinburgh",0],["exeteruk","University of Exeter",0],["uhmanoa","University of Hawaii at Manoa",0],["uherts","University of Hertfordshire",0],["hulluni","University of Hull",0],["illinoislibrary","University of Illinois",0],["uisedu","University of Illinois at Springfield",0],["uofiowa","University of Iowa",0],["uj","University of Johannesburg",0],["kansasuni","University of Kansas",0],["kentuni","University of Kent",0],["ulaverne","University of La Verne",0],["uol","University of Leeds",0],["leicester","University of Leicester",0],["ulincoln","University of Lincoln",0],["livuni","University of Liverpool",0],["umass","University of Massachusetts Amherst",0],["unimelb","University of Melbourne Student Union",0],["uofmiami","University of Miami Libraries",0],["umich","University of Michigan",0],["universityofminnesota","University of Minnesota",0],["montevallo","University of Montevallo",0],["unm","University of New Mexico Health Sciences Library",0],["una","University of North Alabama",0],["uncp","University of North Carolina - Pembroke",0],["unco","University of Northern Colorado",0],["upenn","University of Pennsylvania",0],["pitt","University of Pittsburgh",0],["uregina","University of Regina",0],["urichmond","University of Richmond",0],["roeuni","University of Roehampton London",0],["sheffield","University of Sheffield",0],["usd","University of South Dakota",0],["soton","University of Southampton",0],["standrews","University of St Andrews",0],["sussex","University of Sussex",0],["mcdermott","University of Texas at Dallas",0],["arts","University of the Arts London",0],["fraser","University of the Fraser Valley",0],["uofnkona","University of the Nations",0],["utltoronto","University of Toronto",0],["uofu","University of Utah Libraries",0],["universityvt","University of Vermont",0],["warwick","University of Warwick",0],["uwashington","University of Washington",0],["uwisconsin","University of Wisconsin System",1],["unswedu","UNSW Library",0],["upnorth","Up North Digital Collection",1],["uhls","Upper Hudson Library System",1],["novel","Upper North Island",1],["usfws","US Fish and Wildlife Service",0],["gao","US Government Accountability Office",0],["usplibrary","US Pharmacopeial Convention Inc  USP",0],["ussenatelib","US Senate Library",0],["usstratcom","US Strategic Command",0],["usfhealthsci","USF Health Libraries",0],["uspsoig","USPS Office of Inspector General",0],["utahcf","Utah Correctional Facilities",0],["usu","Utah State University",0],["valeofglamorgan","Vale of Glamorgan Libraries",0],["valero","Valero Development Library",0],["vdl","Valley Digital Library",1],["valnet","Valnet",1],["vcc","Vancouver Community College",0],["virl","Vancouver Island Regional Library",0],["vpl","Vancouver Public Library",0],["vanderbilt","Vanderbilt University",0],["vaniercollegelibrary","Vanier College",0],["vassar","Vassar College",0],["vattenfall","Vattenfall Open Mind Library",0],["vaughanpl","Vaughan Public Libraries",0],["vecima","Vecima Networks Inc.",0],["voebb","Verbund der Öffentlichen Bibliotheken Berlins (VÖBB)",0],["vcfa","Vermont College of Fine Arts",0],["vhy","Veterans Home of California",0],["viapath","ViaPath Corrections Library",0],["viax","Viax",0],["vvclibrary","Victor Valley College",0],["victoria","Victoria University",0],["vikingdigitallibrary","Viking Library System",0],["villagelearning","Village Learning Place, Inc.",0],["vbpl","Virginia Beach Public Library",0],["vccs","Virginia Community College System",0],["vadoc","Virginia Department of Corrections",0],["vppl","Virginia Piedmont Public Libraries",1],["vsulibrary","Virginia State University",0],["njedge","Virtual Academic Library Environment of New Jersey (VALE)",1],["virtuallibrary","Virtual Library of Wyoming",1],["ncbi","Vision Ireland",0],["volusia","Volusia County Public Library",0],["waggalibrary","Wagga Wagga City Library",0],["wakegov","Wake County Public Libraries",0],["wakeforest","Wake Forest University",0],["wakefielduk","Wakefield Libraries and Information Services",0],["walsalluk","Walsall Libraries",0],["walterpmoore","Walter P Moore",0],["warrenwilson","Warren Wilson College",0],["wtcpl","Warren-Trumbull County Public Library",0],["warwickshiregb","Warwickshire Library and Information Service",0],["anytime","Washington Anytime Library",1],["wccls","Washington County Cooperative Library Services",0],["washoecounty","Washoe County Library System",0],["waterfordlib","Waterford City & County Libraries",0],["waverley","Waverley Library",0],["wavetronix","Wavetronix",0],["weatherford","Weatherford College",0],["webfx","WebFX",0],["weldcounty","Weld County Correctional Jail",0],["wcl","Wellington City Libraries",0],["wellstown","Wells Public Library",0],["lcwg","Welsh Government",0],["wzlib","Wenzhou Library (温州市图书馆)",0],["westcaldwellnj","West Caldwell Public Library",0],["westdunbartonuk","West Dunbartonshire Libraries",0],["westlothianuk","West Lothian Libraries",0],["westsussexuk","West Sussex County Council",0],["westtexas","West Texas Digital Consortium",1],["wvdeli","West Virginia Downloadable Entertainment Library Initiative",1],["wvreads","West Virginia Reads",1],["wvu","West Virginia University",0],["wvuparkersburg","West Virginia University at Parkersburg",0],["westbanklibrary","Westbank Community Library District",0],["westchester","Westchester Library System",1],["wapldmc","Western Australia Public Libraries",1],["westerncape","Western Cape Provincial Library",0],["wcu","Western Carolina University",0],["witcc","Western Iowa Tech Community College",0],["cne-siar","Western Isles Libraries",0],["wneuniversity","Western New England University",0],["wnmu","Western New Mexico University",0],["wplibs","Western Plains Library System",0],["uws","Western Sydney University",0],["westleihe24","Westleihe24",1],["westmeathie","Westmeath County Library",0],["westmoreland","Westmoreland County Libraries",1],["westmount","Westmount Public Library",0],["wexfordie","Wexford County Council Public Libraries",0],["wcjc","Wharton County Junior College",0],["whdl","WHDL Lending Library",0],["wheaton","Wheaton College",0],["whitby","Whitby Public Library",0],["fuelyourmind","White Pine Library Cooperative",1],["whitman","Whitman College",0],["whittierpubliclibrary","Whittier Public Library",0],["whuedu","WHU - Otto Beisheim School of Management",0],["wichita","Wichita Public Library",0],["wicklowie","Wicklow County Library",0],["wildanimalinitiative","Wild Animal Initiative",0],["williammary","William & Mary",0],["wrl","Williamsburg Regional Library",0],["willowbrookbaptist","Willowbrook Baptist Church",0],["wiltshirelibsuk","Wiltshire Council Libraries",0],["winnipeg","Winnipeg Public Library",0],["winterparklibrary","Winter Park Library",0],["wiscal","Wisconsin Academic Library Consortium",1],["wplc","Wisconsin Public Library Consortium",1],["wisetechglobal","WiseTech Global",0],["wokinghamuk","Wokingham Libraries",0],["wbrl","Wood Buffalo Regional Library",0],["wcdpl","Wood County District Public Library",0],["woodlands","Woodlands Downloadable Library",1],["woollahra","Woollahra Libraries",0],["librarynetwork","World Bank International Monetary Fund Library Network",0],["wrexhamuk","Wrexham County Library",0],["jhlib","Wuhan Jianghan District Library",0],["wyevalleynhs","Wye Valley NHS Trust",0],["xzlib","Xiangzhou Library",0],["yvl","Yakima Valley Libraries",0],["yale","Yale University",0],["yamagata-e-lib","Yamagata City Library",0],["yamecity-lib","Yame City Library",0],["yslib","Yangsan Library",0],["yarralibraries","Yarra Libraries",0],["yln","Yavapai Library Network",1],["sir","Yayasan Bank Rakyat",0],["ylefi","Yle",0],["ymcagreatersa","YMCA of Greater San Antonio",0],["yoichi-library","Yoichi Town Library",0],["yolocounty","Yolo County Library",0],["yonginlib","YongIn City Library",0],["ylpl","Yorba Linda Public Library",0],["ycl","York County Libraries",0],["yclibrary","York County Library",0],["yorkcpmags","York County Prison, Pennsylvania",0],["yorkcountyva","York County Public Library",0],["yedi","York Entrepreneurship Development Institute",0],["yorkhills","York Hills Centre for Children, Youth and Families",0],["yorklibraries","York Libraries",0],["yorkrp","York Regional Police",0],["yorku","York University",0],["yubaccd","Yuba Community College District",0],["yukon","Yukon Public Libraries",0],["yuma","Yuma County Library District",0],["yuseonglib","Yuseong-gu Library",0],["zayeduni","Zayed University",0],["zwf","ZENSHO Group Worker's Federation",0],["pura","Zentralbibliothek PURA",0],["zjlib","Zhejiang Library (浙江图书馆)",0],["zslib","Zhongshan Public Library (中山市中山图书馆)",0],["jwlib","Zhuhai Jinwan District Library",0],["zionserangoon","Zion Serangoon B-P Church",0]]</script>
+<script>/* libbycheck core: a JavaScript port of the Python package's matching and lookup logic.
+ *
+ * No DOM code lives here, so Node can test it (web/test/core.test.js) and the build inlines it
+ * into the single-file web app. Behavior is pinned to the Python implementation by the shared
+ * cases in tests/vectors.json. Change one side and the other must follow.
+ *
+ * Listing objects use snake_case field names on purpose: they mirror the Python Listing and the
+ * shared test cases.
+ */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.LibbyCore = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const BASE_URL = "https://thunder.api.overdrive.com/v2";
+
+  // ---------------------------------------------------------------- ISBN
+
+  function check13(d) {
+    let t = 0;
+    for (let i = 0; i < 12; i++) t += Number(d[i]) * (i % 2 === 0 ? 1 : 3);
+    return (10 - (t % 10)) % 10 === Number(d[12]);
+  }
+
+  function check10(c) {
+    let t = 0;
+    for (let i = 0; i < 10; i++) t += (c[i] === "X" ? 10 : Number(c[i])) * (10 - i);
+    return t % 11 === 0;
+  }
+
+  /** A valid ISBN-13 for an ISBN-10/13 in any common formatting (hyphens, Goodreads' ="..." wrapper), else null. */
+  function toIsbn13(raw) {
+    if (!raw) return null;
+    const c = String(raw).replace(/[^0-9Xx]/g, "").toUpperCase();
+    if (c.length === 13 && /^\d{13}$/.test(c) && check13(c)) return c;
+    if (c.length === 10 && /^\d{9}/.test(c) && check10(c)) {
+      const body = "978" + c.slice(0, 9);
+      let t = 0;
+      for (let i = 0; i < 12; i++) t += Number(body[i]) * (i % 2 === 0 ? 1 : 3);
+      return body + String((10 - (t % 10)) % 10);
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------- matching
+
+  const BRACKETS = /\s*[(\[][^)\]]*[)\]]/g;
+  const SUBTITLE_SPLIT = /\s*[:—–]\s+|\s+-\s+/;
+  const ARTICLES = new Set(["the", "a", "an"]);
+  const NAME_SUFFIXES = new Set(["jr", "sr", "ii", "iii", "iv", "phd", "md"]);
+  const FUZZY_TITLE_THRESHOLD = 0.92;
+  const GENERIC_TAILS = new Set(["novel", "memoir", "stories", "poems", "essays", "thriller", "mystery", "romance", "a story"]);
+  const BENIGN_SUBTITLE = new RegExp(
+    "\\b(novel|novella|memoir|stories|poems|poetry|essays|thriller|mystery|romance|edition|" +
+      "unabridged|abridged|anniversary|reissue|reprint|annotated|illustrated|revised|expanded)\\b"
+  );
+  const LONG_SUBTITLE_WORDS = 4;
+  const STRONG = ["isbn", "exact"];
+
+  function stripAccents(s) {
+    return s.normalize("NFKD").replace(/\p{M}/gu, "");
+  }
+
+  function norm(s) {
+    s = stripAccents(s).toLowerCase().replace(/&/g, " and ").replace(/['’]/g, "");
+    return s.replace(/[^a-z0-9]+/g, " ").trim();
+  }
+
+  function dropArticle(n) {
+    const parts = n.split(" ");
+    return parts.length > 1 && ARTICLES.has(parts[0]) ? parts.slice(1).join(" ") : n;
+  }
+
+  /** Split at the first subtitle separator, like Python's split(maxsplit=1). */
+  function splitSubtitle(t) {
+    const m = SUBTITLE_SPLIT.exec(t);
+    return m ? [t.slice(0, m.index), t.slice(m.index + m[0].length)] : [t];
+  }
+
+  /** [full, main, tail] normalised forms. Brackets removed; tail is the subtitle ("" if none). */
+  function titleForms(title) {
+    const t = title.replace(BRACKETS, "");
+    const parts = splitSubtitle(t);
+    return [dropArticle(norm(t)), dropArticle(norm(parts[0])), parts.length > 1 ? dropArticle(norm(parts[1])) : ""];
+  }
+
+  /** Title without series brackets or subtitle, for building search queries. */
+  function mainTitle(title) {
+    return splitSubtitle(title.replace(BRACKETS, ""))[0].trim();
+  }
+
+  // Port of difflib.SequenceMatcher(None, a, b).ratio() for short strings (no junk/autojunk).
+  function longestMatch(a, b, alo, ahi, blo, bhi) {
+    let besti = alo, bestj = blo, bestsize = 0;
+    let j2len = new Map();
+    for (let i = alo; i < ahi; i++) {
+      const next = new Map();
+      for (let j = blo; j < bhi; j++) {
+        if (a[i] !== b[j]) continue;
+        const k = (j2len.get(j - 1) || 0) + 1;
+        next.set(j, k);
+        if (k > bestsize) { besti = i - k + 1; bestj = j - k + 1; bestsize = k; }
+      }
+      j2len = next;
+    }
+    return [besti, bestj, bestsize];
+  }
+
+  function matchedChars(a, b, alo, ahi, blo, bhi) {
+    if (alo >= ahi || blo >= bhi) return 0;
+    const [i, j, k] = longestMatch(a, b, alo, ahi, blo, bhi);
+    if (!k) return 0;
+    return k + matchedChars(a, b, alo, i, blo, j) + matchedChars(a, b, i + k, ahi, j + k, bhi);
+  }
+
+  function ratio(a, b) {
+    const total = a.length + b.length;
+    return total === 0 ? 1 : (2 * matchedChars(a, b, 0, a.length, 0, b.length)) / total;
+  }
+
+  /** "exact", "main-title", "tail", "fuzzy" or null. */
+  function titleMatch(grTitle, odTitle, odSubtitle) {
+    let odFull = odTitle;
+    if (odSubtitle && !norm(odTitle).includes(norm(odSubtitle))) odFull = odTitle + ": " + odSubtitle;
+    const [gFull, gMain, gTail] = titleForms(grTitle);
+    const [oFull, oMain, oTail] = titleForms(odFull);
+    if (!gFull || !oFull) return null;
+    if (gFull === oFull) return "exact";
+    if (gMain === oMain) {
+      const gPlain = !gTail || BENIGN_SUBTITLE.test(gTail);
+      const oPlain = !oTail || BENIGN_SUBTITLE.test(oTail);
+      if (gPlain && oPlain) return "exact";
+      if (gTail && !oTail && gTail.split(" ").length >= LONG_SUBTITLE_WORDS) return "exact";
+      if (!(gTail && oTail)) return "main-title";
+    }
+    if (gTail && !oTail && gTail === oFull && !GENERIC_TAILS.has(gTail)) return "tail";
+    if (oTail && !gTail && oTail === gFull && !GENERIC_TAILS.has(oTail)) return "tail";
+    if (ratio(gFull, oFull) >= FUZZY_TITLE_THRESHOLD) return "fuzzy";
+    return null;
+  }
+
+  /** [last name, first initial] from "First Last", "Last, First" or "J.R.R. Tolkien". */
+  function authorKey(name) {
+    name = stripAccents(name).replace(/['’]/g, "");
+    const comma = name.indexOf(",");
+    if (comma !== -1) name = name.slice(comma + 1) + " " + name.slice(0, comma);
+    const tokens = name.replace(/[^A-Za-z]+/g, " ").toLowerCase().split(/\s+/).filter((t) => t && !NAME_SUFFIXES.has(t));
+    if (!tokens.length) return ["", ""];
+    return [tokens[tokens.length - 1], tokens.length > 1 ? tokens[0][0] : ""];
+  }
+
+  /** Surname as written (case and accents kept) for use in a search query. */
+  function querySurname(name) {
+    if (name.includes(",")) return name.slice(0, name.indexOf(",")).trim();
+    const tokens = name.replace(/\./g, " ").split(/\s+/).filter((t) => t && !NAME_SUFFIXES.has(t.toLowerCase().replace(/^,+|,+$/g, "")));
+    return tokens.length ? tokens[tokens.length - 1] : "";
+  }
+
+  function authorsMatch(grAuthors, odCreators) {
+    for (const g of grAuthors) {
+      const [gLast, gInit] = authorKey(g);
+      if (!gLast) continue;
+      for (const o of odCreators) {
+        const [oLast, oInit] = authorKey(o);
+        if (gLast === oLast && (!gInit || !oInit || gInit === oInit)) return true;
+      }
+    }
+    return false;
+  }
+
+  function bookAuthors(book) {
+    return [book.author, ...(book.additional_authors || [])].filter(Boolean);
+  }
+
+  /** "isbn", a title kind that also had a matching author, or null. */
+  function match(book, listing) {
+    if ((book.isbns || []).some((i) => listing.isbns.includes(i))) return "isbn";
+    const kind = titleMatch(book.title, listing.title, listing.subtitle);
+    return kind && authorsMatch(bookAuthors(book), listing.creators) ? kind : null;
+  }
+
+  // ---------------------------------------------------------------- listings
+
+  const LISTING_DEFAULTS = {
+    library: "", media_id: "", title: "", subtitle: "", creators: [], media_type: "", languages: [], isbns: [],
+    is_owned: true, is_available: false, is_holdable: false, owned_copies: null, available_copies: null, holds: 0,
+    est_wait_days: null, lucky_day_available: 0, pre_release: false, availability_type: "",
+  };
+
+  function makeListing(partial) {
+    return Object.assign({}, LISTING_DEFAULTS, partial);
+  }
+
+  /** Port of Listing.from_api: trim a raw Thunder record to the fields we use. */
+  function listingFromApi(raw, library) {
+    let creators = (raw.creators || []).filter((c) => c.name).map((c) => c.name);
+    if (!creators.length && raw.firstCreatorName) creators = [raw.firstCreatorName];
+    const isbns = new Set();
+    for (const f of raw.formats || []) {
+      for (const id of f.identifiers || []) {
+        if (id.type === "ISBN" || id.type === "LibraryISBN") {
+          const isbn = toIsbn13(id.value);
+          if (isbn) isbns.add(isbn);
+        }
+      }
+    }
+    return {
+      library,
+      media_id: String(raw.id),
+      title: raw.title || "",
+      subtitle: raw.subtitle || "",
+      creators,
+      media_type: (raw.type && raw.type.id) || "",
+      languages: (raw.languages || []).filter((l) => l.id).map((l) => l.id),
+      isbns: [...isbns].sort(),
+      is_owned: raw.isOwned !== false,
+      is_available: Boolean(raw.isAvailable),
+      is_holdable: Boolean(raw.isHoldable),
+      owned_copies: raw.ownedCopies ?? null,
+      available_copies: raw.availableCopies ?? null,
+      holds: raw.holdsCount || 0,
+      est_wait_days: raw.estimatedWaitDays ?? null,
+      lucky_day_available: raw.luckyDayAvailableCopies || 0,
+      pre_release: Boolean(raw.isPreReleaseTitle),
+      availability_type: raw.availabilityType || "",
+    };
+  }
+
+  const unlimited = (l) => l.availability_type === "always";
+  const inCollection = (l) => l.is_owned && (unlimited(l) || l.owned_copies !== 0);
+
+  /** "available" | "wait" | "unavailable". Free copies must outnumber holds (see the Python docstring). */
+  function status(l) {
+    if (l.is_available) {
+      if (unlimited(l)) return "available";
+      if (l.available_copies === null) return l.holds === 0 ? "available" : "wait";
+      return l.available_copies > l.holds ? "available" : "wait";
+    }
+    return l.is_holdable ? "wait" : "unavailable";
+  }
+
+  const copiesReservedForHolds = (l) => l.is_available && status(l) === "wait";
+
+  function libraryUrl(l) {
+    // Follows OverDrive's usual pattern; not verified from the build environment.
+    return `https://${encodeURIComponent(l.library)}.overdrive.com/media/${encodeURIComponent(l.media_id)}`;
+  }
+
+  // ---------------------------------------------------------------- lookup pipeline
+
+  const STATUS_RANK = { available: 0, wait: 1, unavailable: 2 };
+
+  function queriesFor(book) {
+    const title = mainTitle(book.title);
+    const last = book.author ? querySurname(book.author) : "";
+    const queries = [];
+    if (title && last) queries.push(`${title} ${last}`);
+    if (title) queries.push(title);
+    queries.push(...[...(book.isbns || [])].sort());
+    return queries.filter((q, i) => queries.indexOf(q) === i);
+  }
+
+  /** Verified offers for one book at one library. client.search(library, query) -> Promise<listing[]>. */
+  async function findOffers(client, library, book, types, languages) {
+    const typeSet = new Set(types), langSet = new Set(languages);
+    let weak = [];
+    for (const query of queriesFor(book)) {
+      const offers = [];
+      for (const listing of await client.search(library, query)) {
+        if (!inCollection(listing)) continue;
+        if (typeSet.size && !typeSet.has(listing.media_type)) continue;
+        if (langSet.size && listing.languages.length && !listing.languages.some((l) => langSet.has(l))) continue;
+        const kind = match(book, listing);
+        if (kind) offers.push({ listing, match: kind });
+      }
+      const strong = offers.filter((o) => STRONG.includes(o.match));
+      if (strong.length) return strong;
+      if (!weak.length) weak = offers;
+    }
+    return weak;
+  }
+
+  function bestOffer(offers, prefer) {
+    if (!offers.length) return null;
+    const key = (o) => {
+      const l = o.listing;
+      const fmt = prefer.includes(l.media_type) ? prefer.indexOf(l.media_type) : prefer.length;
+      const wait = l.est_wait_days !== null ? l.est_wait_days : 1e6;
+      const st = status(l);
+      return [STATUS_RANK[st], st === "available" ? 0 : wait, fmt, -(l.owned_copies || 0), l.library];
+    };
+    const cmp = (a, b) => {
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+      return 0;
+    };
+    let best = offers[0], bestKey = key(best);
+    for (const o of offers.slice(1)) {
+      const k = key(o);
+      if (cmp(k, bestKey) < 0) { best = o; bestKey = k; }
+    }
+    return best;
+  }
+
+  /**
+   * Check every book at every library with a small worker pool. A failed lookup is recorded on the
+   * result (never thrown) so one flaky library cannot sink the run. opts: {types, languages, workers,
+   * onProgress(done,total), shouldStop()}. Results keep the order of `books`.
+   */
+  async function checkBooks(books, libraries, client, opts) {
+    const o = Object.assign({ types: [], languages: [], workers: 4 }, opts);
+    const results = books.map((book) => ({ book, offers: [], errors: [] }));
+    const tasks = [];
+    books.forEach((_, i) => libraries.forEach((lib) => tasks.push([i, lib])));
+    let next = 0, done = 0;
+    async function worker() {
+      for (;;) {
+        if (o.shouldStop && o.shouldStop()) return;
+        const t = tasks[next++];
+        if (!t) return;
+        const [i, lib] = t;
+        try {
+          results[i].offers.push(...(await findOffers(client, lib, books[i], o.types, o.languages)));
+        } catch (e) {
+          results[i].errors.push(`${lib}: ${e && e.message ? e.message : e}`);
+        }
+        done++;
+        if (o.onProgress) o.onProgress(done, tasks.length);
+      }
+    }
+    await Promise.all(Array.from({ length: Math.max(1, o.workers) }, worker));
+    return results;
+  }
+
+  // ---------------------------------------------------------------- OverDrive client
+
+  class ApiError extends Error {
+    constructor(message) { super(message); this.name = "ApiError"; }
+  }
+  class LibraryNotFound extends ApiError {
+    constructor(message) { super(message); this.name = "LibraryNotFound"; }
+  }
+
+  const CACHE_PREFIX = "lbc:v2:";
+
+  /**
+   * Thunder client for the browser (or Node, with a fake fetch in tests): spaces requests out, retries
+   * transient failures with backoff, and caches search results briefly in `storage` (localStorage-like).
+   */
+  function createClient(options) {
+    const o = Object.assign(
+      { fetchFn: (...a) => fetch(...a), sleep: (ms) => new Promise((r) => setTimeout(r, ms)), now: () => Date.now(),
+        storage: null, minInterval: 150, retries: 4, ttlMs: 30 * 60 * 1000, timeoutMs: 30000, refresh: false },
+      options
+    );
+    let nextSlot = 0;
+
+    async function throttle() {
+      const t = o.now();
+      const wait = nextSlot - t;
+      nextSlot = Math.max(t, nextSlot) + o.minInterval;
+      if (wait > 0) await o.sleep(wait);
+    }
+
+    async function get(path, params) {
+      let url = BASE_URL + path;
+      if (params) url += "?" + new URLSearchParams(params).toString();
+      let lastError = "";
+      for (let attempt = 0; attempt <= o.retries; attempt++) {
+        await throttle();
+        let delay = 2000 * 2 ** attempt;
+        try {
+          const init = {};
+          if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) init.signal = AbortSignal.timeout(o.timeoutMs);
+          const resp = await o.fetchFn(url, init);
+          if (resp.ok) return await resp.json();
+          if (resp.status === 404) throw new LibraryNotFound(`404 Not Found: ${path}`);
+          lastError = `HTTP ${resp.status} for ${path}`;
+          if (![429, 500, 502, 503, 504].includes(resp.status)) throw new ApiError(lastError);
+          const ra = resp.headers && resp.headers.get && resp.headers.get("Retry-After");
+          if (ra && /^\d+$/.test(ra)) delay = Math.max(delay, Number(ra) * 1000);
+        } catch (e) {
+          if (e instanceof ApiError) throw e;
+          lastError = `${e && e.name ? e.name : "Error"} for ${path}: ${e && e.message ? e.message : e}`;
+        }
+        if (attempt < o.retries) await o.sleep(delay);
+      }
+      throw new ApiError(`${lastError} (gave up after ${o.retries + 1} attempts)`);
+    }
+
+    function cacheGet(key) {
+      if (o.refresh || !o.storage) return null;
+      try {
+        const blob = JSON.parse(o.storage.getItem(CACHE_PREFIX + key));
+        if (blob && o.now() - blob.t <= o.ttlMs) return blob.d;
+      } catch (e) { /* unreadable cache is just a miss */ }
+      return null;
+    }
+
+    function cachePut(key, data) {
+      if (!o.storage) return;
+      try { o.storage.setItem(CACHE_PREFIX + key, JSON.stringify({ t: o.now(), d: data })); } catch (e) { /* quota: skip */ }
+    }
+
+    return {
+      /** Throws LibraryNotFound for an unknown key. */
+      async libraryInfo(key) {
+        const raw = await get(`/libraries/${encodeURIComponent(key)}`);
+        return { key: raw.preferredKey || raw.id || key, name: raw.name || "", status: raw.status || "", isConsortium: Boolean(raw.isConsortium) };
+      },
+      async search(library, query, perPage = 24) {
+        const key = `search:${library}:${perPage}:${query}`;
+        const hit = cacheGet(key);
+        if (hit) return hit;
+        const raw = await get(`/libraries/${encodeURIComponent(library)}/media`, { query, perPage: String(Math.min(perPage, 100)), page: "1" });
+        const listings = (raw.items || []).map((item) => listingFromApi(item, library));
+        cachePut(key, listings);
+        return listings;
+      },
+      /** Drop expired cache entries so localStorage does not fill up. */
+      prune() {
+        if (!o.storage) return;
+        try {
+          const stale = [];
+          for (let i = 0; i < o.storage.length; i++) {
+            const k = o.storage.key(i);
+            if (!k || !k.startsWith("lbc:")) continue;
+            let blob = null;
+            try { blob = JSON.parse(o.storage.getItem(k)); } catch (e) { /* corrupt */ }
+            if (!k.startsWith(CACHE_PREFIX) || !blob || o.now() - blob.t > o.ttlMs) stale.push(k);
+          }
+          stale.forEach((k) => o.storage.removeItem(k));
+        } catch (e) { /* ignore */ }
+      },
+    };
+  }
+
+  // ---------------------------------------------------------------- Goodreads input
+
+  /** RFC 4180-style CSV parser (quotes, embedded newlines, CRLF, BOM). Like Python's csv module, a quote
+   *  only opens a quoted field at the start of a field. */
+  function parseCsv(text) {
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false;
+        } else field += c;
+      } else if (c === '"' && field === "") inQuotes = true;
+      else if (c === ",") { row.push(field); field = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(field); rows.push(row); row = []; field = "";
+      } else field += c;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows.filter((r) => r.some((f) => f !== ""));
+  }
+
+  /** Books on `shelf` from a Goodreads "Export Library" CSV. Throws a clear Error for the wrong file. */
+  function booksFromGoodreadsCsv(text, shelf) {
+    shelf = shelf || "to-read";
+    const rows = parseCsv(text);
+    if (!rows.length) throw new Error("The file is empty.");
+    const headers = rows[0].map((h) => h.trim());
+    const missing = ["Title", "Author"].filter((c) => !headers.includes(c));
+    if (missing.length) {
+      throw new Error(`Missing expected column(s) ${missing.join(", ")}. Found: ${headers.join(", ")}. Is this the Goodreads "Export Library" CSV?`);
+    }
+    const hasShelfInfo = headers.includes("Exclusive Shelf") || headers.includes("Bookshelves");
+    const books = [];
+    for (const r of rows.slice(1)) {
+      const row = {};
+      headers.forEach((h, i) => { row[h] = (r[i] || "").trim(); });
+      if (hasShelfInfo && row["Exclusive Shelf"] !== shelf && !(row["Bookshelves"] || "").split(",").map((s) => s.trim()).includes(shelf)) continue;
+      if (!row.Title) continue;
+      books.push({
+        title: row.Title,
+        author: row.Author || "",
+        gr_id: row["Book Id"] || "",
+        isbns: [...new Set([toIsbn13(row.ISBN13), toIsbn13(row.ISBN)].filter(Boolean))],
+        additional_authors: (row["Additional Authors"] || "").split(",").map((s) => s.trim()).filter(Boolean),
+        date_added: row["Date Added"] || "",
+      });
+    }
+    return books;
+  }
+
+  /** One book per line: "Title by Author", "Title - Author", "Title — Author" or "Title<TAB>Author".
+   *  Returns {books, skipped}; lines without a recognisable author are skipped, because a book is only
+   *  matched when both title and author agree. */
+  function booksFromText(text) {
+    const books = [], skipped = [];
+    for (let line of text.split(/\r?\n/)) {
+      line = line.trim();
+      if (!line) continue;
+      let m = line.match(/^(.+)\t(.+)$/) || line.match(/^(.+)\s+by\s+(.+)$/i) || line.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+      if (!m) { skipped.push(line); continue; }
+      books.push({ title: m[1].trim(), author: m[2].trim(), gr_id: "", isbns: [], additional_authors: [], date_added: "" });
+    }
+    return { books, skipped };
+  }
+
+  // ---------------------------------------------------------------- report
+
+  const SUMMARY_COLUMNS = ["Title", "Author", "Status", "Library", "Format", "Est. wait (days)", "Holds",
+    "Copies available", "Copies owned", "Match", "Notes", "Library link", "Goodreads link"];
+  const DETAIL_COLUMNS = ["Title", "Author", "Library", "Format", "Status", "Est. wait (days)", "Holds",
+    "Copies available", "Copies owned", "Lucky Day copies available", "Match", "Catalog title", "Library link"];
+  const STATUS_LABEL = { available: "Available now", wait: "Wait list", unavailable: "Owned, not holdable", none: "Not found", error: "Lookup failed" };
+  const MATCH_LABEL = { isbn: "isbn", exact: "title+author", "main-title": "title+author (subtitle differs)",
+    tail: "title+author (franchise prefix)", fuzzy: "title+author (fuzzy)" };
+  const RESULT_RANK = { available: 0, wait: 1, unavailable: 2, error: 3, none: 4 };
+
+  const blankNull = (v) => (v === null || v === undefined ? "" : v);
+  const goodreadsUrl = (b) => (b.gr_id ? `https://www.goodreads.com/book/show/${b.gr_id}` : "");
+
+  function resultStatus(r, prefer) {
+    const best = bestOffer(r.offers, prefer);
+    if (best) return status(best.listing);
+    return r.errors.length ? "error" : "none"; // a failed lookup is never reported as "not in the catalog"
+  }
+
+  function notesFor(r, best, st) {
+    const notes = [];
+    if (best) {
+      const l = best.listing;
+      if (l.pre_release) notes.push("pre-release");
+      if (unlimited(l)) notes.push("unlimited access");
+      if (copiesReservedForHolds(l)) notes.push(`${l.available_copies} free copies but ${l.holds} holds: likely reserved for the queue`);
+      if (l.lucky_day_available) notes.push(`Lucky Day copies available: ${l.lucky_day_available}`);
+    }
+    if (r.errors.length && (best || st === "error")) notes.push("lookup failed: " + r.errors.join("; "));
+    return notes.join("; ");
+  }
+
+  /** One row per book, as arrays matching SUMMARY_COLUMNS; each row also carries a hidden .key = status key. */
+  function summaryRows(results, prefer, sort) {
+    const keyed = results.map((r, idx) => {
+      const st = resultStatus(r, prefer);
+      const best = bestOffer(r.offers, prefer);
+      const l = best ? best.listing : null;
+      const wait = !l || status(l) === "available" || l.est_wait_days === null ? "" : l.est_wait_days;
+      const row = [r.book.title, r.book.author, STATUS_LABEL[st], l ? l.library : "", l ? l.media_type : "", wait,
+        l ? l.holds : "", l ? blankNull(l.available_copies) : "", l ? blankNull(l.owned_copies) : "",
+        best ? MATCH_LABEL[best.match] : "", notesFor(r, best, st), l ? libraryUrl(l) : "", goodreadsUrl(r.book)];
+      row.state = st;
+      row.result = r;
+      const sortKey = sort === "title" ? [r.book.title.toLowerCase(), idx] : [RESULT_RANK[st], wait === "" ? 0 : wait, idx];
+      return { sortKey, row };
+    });
+    keyed.sort((a, b) => {
+      for (let i = 0; i < a.sortKey.length; i++) if (a.sortKey[i] !== b.sortKey[i]) return a.sortKey[i] < b.sortKey[i] ? -1 : 1;
+      return 0;
+    });
+    return keyed.map((k) => k.row);
+  }
+
+  /** One row per library x format, matching DETAIL_COLUMNS. */
+  function detailRows(results) {
+    const rows = [];
+    for (const r of results) {
+      const offers = [...r.offers].sort((a, b) => {
+        const ka = [STATUS_RANK[status(a.listing)], a.listing.library, a.listing.media_type];
+        const kb = [STATUS_RANK[status(b.listing)], b.listing.library, b.listing.media_type];
+        for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return ka[i] < kb[i] ? -1 : 1;
+        return 0;
+      });
+      for (const o of offers) {
+        const l = o.listing, st = status(l);
+        rows.push([r.book.title, r.book.author, l.library, l.media_type, STATUS_LABEL[st],
+          st === "available" || l.est_wait_days === null ? "" : l.est_wait_days, l.holds, blankNull(l.available_copies),
+          blankNull(l.owned_copies), l.lucky_day_available, MATCH_LABEL[o.match],
+          l.title + (l.subtitle ? `: ${l.subtitle}` : ""), libraryUrl(l)]);
+      }
+    }
+    return rows;
+  }
+
+  /** TSV (paste into Google Sheets) or CSV text. Cells never contain raw tabs/newlines. */
+  function toDelimited(rows, columns, delimiter) {
+    const clean = (v) => String(v).replace(/[\t\r\n]/g, " ");
+    const quote = (s) => (s.includes(delimiter) || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s);
+    return [columns, ...rows].map((r) => r.map((c) => quote(clean(c))).join(delimiter)).join("\n") + "\n";
+  }
+
+  return {
+    BASE_URL, toIsbn13, norm, titleForms, mainTitle, ratio, titleMatch, authorKey, querySurname, authorsMatch, match, STRONG,
+    makeListing, listingFromApi, status, inCollection, unlimited, copiesReservedForHolds, libraryUrl,
+    queriesFor, findOffers, bestOffer, checkBooks, createClient, ApiError, LibraryNotFound,
+    parseCsv, booksFromGoodreadsCsv, booksFromText,
+    SUMMARY_COLUMNS, DETAIL_COLUMNS, STATUS_LABEL, MATCH_LABEL, summaryRows, detailRows, resultStatus, toDelimited,
+  };
+});
+</script>
+<script>/* libbycheck web UI. All data from the catalog or the user's files is inserted as text, never as HTML. */
+(function () {
+  "use strict";
+  const C = window.LibbyCore;
+  const $ = (id) => document.getElementById(id);
+
+  function h(tag, props, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const kid of kids.flat()) {
+      if (kid === null || kid === undefined || kid === false) continue;
+      el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    }
+    return el;
+  }
+
+  // ---- persistence (all optional: the page works without storage)
+  function webStorage() { try { return window.localStorage; } catch (e) { return null; } }
+  const store = {
+    get(key, fallback) {
+      try { const v = webStorage().getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+    },
+    set(key, value) { try { webStorage().setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ } },
+  };
+
+  const DIRECTORY = JSON.parse($("library-directory").textContent); // [key, name, isConsortium]
+  const EXAMPLE_BOOKS = [
+    ["The Overstory", "Richard Powers"], ["Piranesi", "Susanna Clarke"], ["Braiding Sweetgrass", "Robin Wall Kimmerer"],
+    ["Project Hail Mary", "Andy Weir"], ["Klara and the Sun", "Kazuo Ishiguro"], ["Gideon the Ninth", "Tamsyn Muir"],
+  ].map(([title, author]) => ({ title, author, gr_id: "", isbns: [], additional_authors: [], date_added: "" }));
+
+  const state = {
+    books: store.get("libbycheck.books", []),
+    booksSource: store.get("libbycheck.booksSource", ""),
+    libraries: store.get("libbycheck.libraries", []), // [{key, name}]
+    results: null, filter: "all", sort: "status", running: false, cancelled: false,
+  };
+
+  function message(el, kind, text) {
+    el.hidden = !text;
+    el.className = "msg " + kind;
+    el.textContent = text || "";
+  }
+
+  function libName(key) {
+    const l = state.libraries.find((x) => x.key === key);
+    return l ? l.name : key;
+  }
+
+  // ---- 1. books
+  function setBooks(books, source) {
+    state.books = books;
+    state.booksSource = source;
+    state.results = null;
+    store.set("libbycheck.books", books);
+    store.set("libbycheck.booksSource", source);
+    renderBooks();
+    renderResults();
+    updateRunButton();
+  }
+
+  function renderBooks() {
+    const box = $("books-summary");
+    box.hidden = !state.books.length;
+    box.replaceChildren();
+    if (!state.books.length) return;
+    const preview = state.books.slice(0, 3).map((b) => b.title).join(", ");
+    box.append(
+      h("p", { text: `${state.books.length} book${state.books.length === 1 ? "" : "s"} ready (${state.booksSource})` }),
+      h("p", { class: "small hint", text: preview + (state.books.length > 3 ? ", ..." : "") }),
+      h("div", { class: "row" }, h("button", { type: "button", class: "link", text: "Clear books", onclick: () => setBooks([], "") }))
+    );
+  }
+
+  $("csv-file").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const msg = $("books-msg");
+    try {
+      const shelf = $("opt-shelf").value.trim() || "to-read";
+      const books = C.booksFromGoodreadsCsv(await file.text(), shelf);
+      if (!books.length) {
+        message(msg, "error", `No books found on the "${shelf}" shelf in ${file.name}. If your shelf has another name, change it under Options and open the file again.`);
+        return;
+      }
+      message(msg, "info", "");
+      setBooks(books, `Goodreads CSV, shelf "${shelf}"`);
+    } catch (err) {
+      message(msg, "error", err.message);
+    }
+  });
+
+  $("use-paste").addEventListener("click", () => {
+    const { books, skipped } = C.booksFromText($("paste-list").value);
+    if (!books.length) {
+      message($("books-msg"), "error", "No books recognised. Put each book on its own line as: Title by Author");
+      return;
+    }
+    message($("books-msg"), skipped.length ? "error" : "info",
+      skipped.length ? `Skipped ${skipped.length} line${skipped.length === 1 ? "" : "s"} with no author (a book is only matched when title and author both agree): ${skipped.slice(0, 3).join("; ")}${skipped.length > 3 ? "..." : ""}` : "");
+    setBooks(books, "pasted list");
+  });
+
+  $("use-example").addEventListener("click", () => {
+    message($("books-msg"), "info", "These are example books, not your shelf.");
+    setBooks(EXAMPLE_BOOKS, "example books");
+  });
+
+  // ---- 2. libraries
+  function saveLibraries() {
+    store.set("libbycheck.libraries", state.libraries);
+    renderLibraries();
+    updateRunButton();
+  }
+
+  function addLibrary(key, name) {
+    if (state.libraries.some((l) => l.key === key)) return;
+    state.libraries.push({ key, name });
+    state.results = null;
+    saveLibraries();
+    renderResults();
+  }
+
+  function renderLibraries() {
+    const chips = $("lib-chips");
+    chips.replaceChildren(...state.libraries.map((l) =>
+      h("li", { class: "chip" }, l.name, h("button", {
+        type: "button", "aria-label": `Remove ${l.name}`, text: "×",
+        onclick: () => { state.libraries = state.libraries.filter((x) => x.key !== l.key); state.results = null; saveLibraries(); renderResults(); },
+      }))));
+    chips.hidden = !state.libraries.length;
+  }
+
+  function searchLibraries(q) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    return DIRECTORY.filter(([key, name]) => { const hay = `${name} ${key}`.toLowerCase(); return words.every((w) => hay.includes(w)); }).slice(0, 30);
+  }
+
+  $("lib-search").addEventListener("input", (e) => {
+    const list = $("lib-results");
+    const found = searchLibraries(e.target.value);
+    list.replaceChildren(...found.map(([key, name, consortium]) =>
+      h("li", {}, h("button", { type: "button", onclick: () => { addLibrary(key, name); $("lib-search").value = ""; list.hidden = true; } },
+        name, " ", h("span", { class: "key", text: `(${key}${consortium ? ", consortium" : ""})` })))));
+    if (e.target.value.trim() && !found.length) list.replaceChildren(h("li", {}, h("button", { type: "button", disabled: true, text: "No match. Try fewer words, or add by key below." })));
+    list.hidden = !e.target.value.trim();
+  });
+
+  $("lib-key-add").addEventListener("click", async () => {
+    const key = $("lib-key").value.trim().toLowerCase();
+    const msg = $("libs-msg");
+    if (!key) return;
+    try {
+      const info = await C.createClient({ minInterval: 0 }).libraryInfo(key);
+      if (info.status && info.status !== "Live") { message(msg, "error", `${info.name || key} exists but its status is "${info.status}", so it is not an active library.`); return; }
+      addLibrary(info.key, info.name || key);
+      $("lib-key").value = "";
+      message(msg, "info", "");
+    } catch (err) {
+      message(msg, "error", err instanceof C.LibraryNotFound ? `No library has the key "${key}". Search by name above instead.` : `Could not reach OverDrive to check "${key}": ${err.message}`);
+    }
+  });
+
+  // ---- 3. run
+  function chosenTypes() { return ["ebook", "audiobook"].filter((t) => $("opt-" + t).checked); }
+
+  function updateRunButton() {
+    const problems = [];
+    if (!state.books.length) problems.push("add your books");
+    if (!state.libraries.length) problems.push("add a library");
+    if (!chosenTypes().length) problems.push("choose ebooks or audiobooks under Options");
+    $("run").disabled = state.running || problems.length > 0;
+    $("run-hint").textContent = problems.length ? `To start: ${problems.join(", ")}.` :
+      `${state.books.length} book${state.books.length === 1 ? "" : "s"} at ${state.libraries.length} librar${state.libraries.length === 1 ? "y" : "ies"}. Large shelves take a minute or two.`;
+  }
+  ["opt-ebook", "opt-audiobook"].forEach((id) => $(id).addEventListener("change", updateRunButton));
+
+  $("cancel").addEventListener("click", () => { state.cancelled = true; $("cancel").disabled = true; });
+
+  $("run").addEventListener("click", async () => {
+    state.running = true; state.cancelled = false; state.results = null;
+    $("cancel").hidden = false; $("cancel").disabled = false;
+    $("progress").hidden = false; $("progress-text").hidden = false;
+    renderResults(); updateRunButton();
+    const client = C.createClient({ storage: webStorage() });
+    client.prune();
+    try {
+      const results = await C.checkBooks(state.books, state.libraries.map((l) => l.key), client, {
+        types: chosenTypes(), languages: $("opt-english").checked ? ["en"] : [], workers: 4,
+        shouldStop: () => state.cancelled,
+        onProgress: (done, total) => {
+          $("progress").max = total; $("progress").value = done;
+          $("progress-text").textContent = `Checked ${done} of ${total} lookups`;
+        },
+      });
+      // A cancelled run would show unchecked books as "Not found", which is false, so drop it.
+      state.results = state.cancelled ? null : results;
+      $("progress-text").textContent = state.cancelled ? "Cancelled. Nothing to show." : "Done.";
+    } catch (err) {
+      $("progress-text").textContent = "Something went wrong: " + err.message;
+    } finally {
+      state.running = false;
+      $("cancel").hidden = true; $("progress").hidden = true;
+      renderResults(); updateRunButton();
+    }
+  });
+
+  // ---- results
+  const FILTERS = [
+    ["all", "All", () => true],
+    ["available", "Available now", (r) => r.state === "available"],
+    ["wait", "Wait list", (r) => r.state === "wait" || r.state === "unavailable"],
+    ["none", "Not found", (r) => r.state === "none"],
+    ["error", "Lookup failed", (r) => r.state === "error"],
+  ];
+
+  function currentRows() {
+    const prefer = ["ebook", "audiobook"];
+    const rows = C.summaryRows(state.results, prefer, state.sort);
+    const f = FILTERS.find((x) => x[0] === state.filter) || FILTERS[0];
+    return { all: rows, shown: rows.filter(f[2]) };
+  }
+
+  function metaLine(r) {
+    const best = C.bestOffer(r.offers, ["ebook", "audiobook"]);
+    if (!best) return "";
+    const l = best.listing, st = C.status(l);
+    const parts = [libName(l.library), l.media_type];
+    if (st === "available") {
+      parts.push(C.unlimited(l) ? "unlimited copies" : l.available_copies !== null && l.owned_copies !== null ? `${l.available_copies} of ${l.owned_copies} copies free` : "copy free");
+    } else {
+      if (l.est_wait_days !== null) parts.push(`about ${l.est_wait_days} day${l.est_wait_days === 1 ? "" : "s"} wait`);
+      parts.push(`${l.holds} hold${l.holds === 1 ? "" : "s"}`);
+      if (l.owned_copies !== null) parts.push(`${l.owned_copies} copies`);
+    }
+    return parts.join(" · ");
+  }
+
+  function detailTable(r) {
+    const rows = C.detailRows([r]);
+    if (!rows.length) return null;
+    const cols = ["Library", "Format", "Status", "Wait (days)", "Holds", "Free / owned", "Match"];
+    return h("details", {}, h("summary", { text: `All libraries and formats (${rows.length})` }),
+      h("div", { class: "table-wrap" }, h("table", {},
+        h("thead", {}, h("tr", {}, cols.map((c) => h("th", { text: c })))),
+        h("tbody", {}, rows.map((d) => {
+          return h("tr", {},
+            h("td", {}, h("a", { href: d[12], target: "_blank", rel: "noopener noreferrer", text: libName(d[2]) })),
+            h("td", { text: d[3] }), h("td", { text: d[4] }), h("td", { text: d[5] }), h("td", { text: d[6] }),
+            h("td", { text: d[7] === "" && d[8] === "" ? "unlimited" : `${d[7]} / ${d[8]}` }), h("td", { text: d[10] }));
+        })))));
+  }
+
+  function renderBookCard(row) {
+    const r = row.result;
+    const st = row.state;
+    const best = C.bestOffer(r.offers, ["ebook", "audiobook"]);
+    const links = [];
+    if (best) links.push(h("a", { href: C.libraryUrl(best.listing), target: "_blank", rel: "noopener noreferrer", text: "Open at library" }));
+    if (r.book.gr_id) links.push(h("a", { href: `https://www.goodreads.com/book/show/${encodeURIComponent(r.book.gr_id)}`, target: "_blank", rel: "noopener noreferrer", text: "Goodreads" }));
+    return h("li", { class: "book", "data-state": st },
+      h("div", { class: "book-head" },
+        h("div", {}, h("div", { class: "book-title", text: r.book.title }), h("div", { class: "book-author", text: r.book.author })),
+        h("span", { class: "pill", "data-state": st, text: C.STATUS_LABEL[st] })),
+      metaLine(r) && h("div", { class: "meta", text: metaLine(r) }),
+      row[10] && h("div", { class: "note", text: row[10] }),
+      best && !C.STRONG.includes(best.match) && h("div", { class: "note", text: `Looser match (${C.MATCH_LABEL[best.match]}). Check that it is the right book.` }),
+      links.length ? h("div", { class: "links" }, links) : null,
+      detailTable(r));
+  }
+
+  function renderResults() {
+    const box = $("results");
+    box.hidden = !state.results;
+    if (!state.results) return;
+    const { all, shown } = currentRows();
+    $("filters").replaceChildren(...FILTERS.map(([id, label, test]) => {
+      const n = all.filter(test).length;
+      if (id !== "all" && id !== "available" && id !== "wait" && n === 0) return null; // hide empty rare buckets
+      return h("button", { type: "button", "aria-pressed": String(state.filter === id), text: `${label} (${n})`,
+        onclick: () => { state.filter = id; renderResults(); } });
+    }).filter(Boolean));
+    $("sort").value = state.sort;
+    const failed = state.results.filter((r) => r.errors.length).length;
+    message($("results-msg"), failed ? "error" : "info",
+      failed ? `${failed} book${failed === 1 ? "" : "s"} had a failed lookup, so results for those may be incomplete. Run the check again to retry.` : "");
+    $("book-list").replaceChildren(...shown.map(renderBookCard));
+    if (!shown.length) $("book-list").replaceChildren(h("li", { class: "small hint", text: "Nothing in this group." }));
+  }
+
+  $("sort").addEventListener("change", (e) => { state.sort = e.target.value; renderResults(); });
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fall through */ }
+    const ta = h("textarea", { style: "position:fixed;opacity:0", "aria-hidden": "true" });
+    ta.value = text; document.body.append(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { /* ignore */ }
+    ta.remove();
+    return ok;
+  }
+
+  $("copy").addEventListener("click", async () => {
+    const { shown } = currentRows();
+    const ok = await copyText(C.toDelimited(shown, C.SUMMARY_COLUMNS, "\t"));
+    message($("results-msg"), ok ? "info" : "error", ok ? `Copied ${shown.length} rows. Paste into cell A1 of a Google Sheet.` : "Could not copy automatically. Use Download CSV instead.");
+  });
+
+  $("download").addEventListener("click", () => {
+    const { shown } = currentRows();
+    const url = URL.createObjectURL(new Blob([C.toDelimited(shown, C.SUMMARY_COLUMNS, ",")], { type: "text/csv" }));
+    const a = h("a", { href: url, download: "libbycheck.csv" });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  // ---- boot
+  renderBooks();
+  renderLibraries();
+  updateRunButton();
+  // Test/automation hook: lets a script read the rendered state without scraping.
+  window.__libbycheck = state;
+})();
+</script>
+</body>
+</html>

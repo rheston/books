@@ -12,9 +12,43 @@ Piranesi                       Susanna Clarke    Wait list      nypl     ebook  
 Zxqv Plorn Handbook of Nonex…  Nobody Nowhere    Not found
 ```
 
-Python 3.11+, standard library only (nothing to `pip install`).
+There are two ways to run it, both from this repo:
 
-## Quick start
+| | Web app | Command line |
+|---|---|---|
+| Runs on | Any modern browser, **including your phone** | A computer with Python 3.11+ |
+| Install | None. It is one file: `docs/index.html` | None (standard library only) |
+| Goodreads input | CSV export, or a pasted list | CSV export or RSS feed |
+| Best for | Checking from anywhere | Scheduling, scripting, saving a report on a timer |
+
+Both use the same matching rules, kept identical by shared tests (see Development).
+
+## Web app (works on your phone)
+
+`docs/index.html` is the whole app: no server, no account, no build step to use it, no requests except to OverDrive.
+
+**Put it on your phone.** The repo is public, so GitHub Pages can host it for free:
+
+1. On GitHub: repo **Settings → Pages → Build and deployment**.
+2. Source: **Deploy from a branch**. Branch: `main` (or whichever branch has `docs/`). Folder: **/docs**. Save.
+3. After a minute it is live at `https://<your-username>.github.io/books/`. Open that on your phone, then use your browser's **Add to Home Screen** so it opens like an app.
+
+The page contains no personal data: your book list and libraries are stored only in your own browser.
+To use it on a computer without hosting, just open `docs/index.html` in a browser.
+
+**Use it.**
+
+1. **Your books.** Export from Goodreads (My Books, then Import and export, then Export Library) and open the CSV in the page. Or paste lines like `Piranesi by Susanna Clarke`. The page remembers them, so next time you only press Check.
+2. **Your libraries.** Search by name and tap to add each library whose card you have in Libby. (It can also add by key.)
+3. **Check availability.** Results show Available now, Wait list and Not found, with a filter, a sort, per-library detail, and **Copy for Google Sheets** (paste into cell A1) or **Download CSV**.
+
+The web app does not read a Goodreads RSS feed. I could not test whether Goodreads lets a web page read its feed, and the usual workaround (a third-party proxy) would expose your private RSS key. The command-line tool still supports RSS.
+
+## Command line
+
+Use this for scheduling or scripting.
+
+### Quick start
 
 ```bash
 cp config.example.toml config.toml      # config.toml is git-ignored: it holds your private RSS key
@@ -45,7 +79,7 @@ libbycheck libraries info kcls              # verify a key
 The key is also the subdomain of your library's OverDrive site (`nypl.overdrive.com` → `nypl`).
 A typo'd key fails immediately instead of after hundreds of lookups.
 
-## Output
+## Command line output and flags
 
 `libbycheck check` prints one row per book, best option first. Useful flags:
 
@@ -106,6 +140,13 @@ ISBNs (a print ISBN searched live returned nothing), so title + author is what f
   This is inferred from API data and has not been checked against the Libby app.
 - **Library links** (`https://<key>.overdrive.com/media/<id>`) follow OverDrive's usual URL pattern but were not
   opened during development.
+- **Web app testing.** It was driven end to end in headless Chromium at iPhone 13 size, in light and dark, against the
+  live OverDrive API: CSV upload, library search, add by key, a full run, filter, sort, copy (clipboard contents checked),
+  CSV download, cancel, and reload persistence. It was **not** tested in real iOS Safari or Android Chrome, on GitHub
+  Pages, or with Goodreads' export on a phone.
+- **Library list is a snapshot.** The page embeds the 2,315 libraries that were live on 2026-11-07 (terminated, merged and
+  preview accounts are left out). If yours is missing, add it by key, or refresh with
+  `python tools/build_web.py --refresh-directory`.
 - Not covered: Libby's "Lucky Day" collection (shown in Notes only), magazines, and Hoopla/other services.
 
 ## Running it on a schedule
@@ -119,8 +160,17 @@ It is a normal CLI, so cron works, e.g. refresh a sheet-ready file each morning:
 ## Development
 
 ```bash
-python -m unittest discover -s tests
+python -m unittest discover -s tests      # Python: CLI logic, plus a check that docs/index.html is up to date
+node --test web/test/core.test.js         # JavaScript: the web app's logic
+python tools/build_web.py                 # rebuild docs/index.html after editing web/src/*
 ```
+
+`docs/index.html` is generated from `web/src/` (`index.html`, `core.js`, `app.js`) and `web/libraries.json`. Edit those,
+then rebuild; a Python test fails if the built file is stale.
+
+The Python and JavaScript implementations are held together by `tests/vectors.json`: shared matching, status and
+ranking cases, plus a golden TSV that Python renders and JavaScript must reproduce byte for byte. Change a rule in one
+place and both suites fail until the other follows.
 
 The tests include a trimmed copy of a real OverDrive response (`tests/fixtures/`) and network-free fakes. Goodreads
 samples in the tests are synthetic.

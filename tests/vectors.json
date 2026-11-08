@@ -1,0 +1,1208 @@
+{
+ "_note": "Shared test cases. tests/test_vectors.py (Python) and web/test/core.test.js (JavaScript) must both pass these, which keeps the CLI and the web app matching identically. Listings are partial: fields not given come from listing_defaults. Catalog titles/numbers marked 'live' were observed in real OverDrive responses on 2026-11-07.",
+ "listing_defaults": {
+  "library": "a",
+  "media_id": "9",
+  "title": "The Overstory",
+  "subtitle": "",
+  "creators": [
+   "Richard Powers"
+  ],
+  "media_type": "ebook",
+  "languages": [
+   "en"
+  ],
+  "isbns": [],
+  "is_owned": true,
+  "is_available": false,
+  "is_holdable": true,
+  "owned_copies": 2,
+  "available_copies": 0,
+  "holds": 3,
+  "est_wait_days": 10,
+  "lucky_day_available": 0,
+  "pre_release": false,
+  "availability_type": "normal"
+ },
+ "toIsbn13": [
+  [
+   "0306406152",
+   "9780306406157"
+  ],
+  [
+   "080442957X",
+   "9780804429573"
+  ],
+  [
+   "=\"978-0-393-63553-9\"",
+   "9780393635539"
+  ],
+  [
+   "9780393635522",
+   "9780393635522"
+  ],
+  [
+   "9780393635523",
+   null
+  ],
+  [
+   "not an isbn",
+   null
+  ],
+  [
+   "",
+   null
+  ],
+  [
+   null,
+   null
+  ]
+ ],
+ "querySurname": [
+  [
+   "Richard Powers",
+   "Powers"
+  ],
+  [
+   "Powers, Richard",
+   "Powers"
+  ],
+  [
+   "Martin Luther King Jr.",
+   "King"
+  ],
+  [
+   "Gabriel García Márquez",
+   "Márquez"
+  ],
+  [
+   "J.R.R. Tolkien",
+   "Tolkien"
+  ],
+  [
+   "",
+   ""
+  ]
+ ],
+ "authorKey": [
+  [
+   "Powers, Richard",
+   [
+    "powers",
+    "r"
+   ]
+  ],
+  [
+   "Richard Powers",
+   [
+    "powers",
+    "r"
+   ]
+  ],
+  [
+   "J.R.R. Tolkien",
+   [
+    "tolkien",
+    "j"
+   ]
+  ],
+  [
+   "Gabriel García Márquez",
+   [
+    "marquez",
+    "g"
+   ]
+  ],
+  [
+   "Martin Luther King Jr.",
+   [
+    "king",
+    "m"
+   ]
+  ],
+  [
+   "Anonymous",
+   [
+    "anonymous",
+    ""
+   ]
+  ],
+  [
+   "O'Connor, Flannery",
+   [
+    "oconnor",
+    "f"
+   ]
+  ],
+  [
+   "",
+   [
+    "",
+    ""
+   ]
+  ]
+ ],
+ "authorsMatch": [
+  {
+   "gr": [
+    "Richard Powers"
+   ],
+   "od": [
+    "Richard Powers",
+    "Someone Narrator"
+   ],
+   "expect": true
+  },
+  {
+   "gr": [
+    "Anonymous"
+   ],
+   "od": [
+    "Anonymous"
+   ],
+   "expect": true
+  },
+  {
+   "gr": [
+    "X Y",
+    "Ursula K. Le Guin"
+   ],
+   "od": [
+    "Le Guin, Ursula K."
+   ],
+   "expect": true
+  },
+  {
+   "gr": [
+    "J.R.R. Tolkien"
+   ],
+   "od": [
+    "J. R. R. Tolkien"
+   ],
+   "expect": true
+  },
+  {
+   "gr": [
+    "Stephen King"
+   ],
+   "od": [
+    "Joe King"
+   ],
+   "expect": false
+  },
+  {
+   "gr": [
+    "Richard Powers"
+   ],
+   "od": [
+    "Maja Lunde"
+   ],
+   "expect": false
+  },
+  {
+   "gr": [],
+   "od": [
+    "Maja Lunde"
+   ],
+   "expect": false
+  }
+ ],
+ "titleMatch": [
+  {
+   "gr": "The Left Hand of Darkness (Hainish Cycle, #4)",
+   "od": "Left Hand of Darkness",
+   "expect": "exact"
+  },
+  {
+   "gr": "Braiding Sweetgrass: Indigenous Wisdom, Scientific Knowledge and the Teachings of Plants",
+   "od": "Braiding Sweetgrass",
+   "sub": "Indigenous Wisdom, Scientific Knowledge and the Teachings of Plants",
+   "expect": "exact"
+  },
+  {
+   "gr": "Braiding Sweetgrass: Indigenous Wisdom, Scientific Knowledge and the Teachings of Plants",
+   "od": "Braiding Sweetgrass",
+   "expect": "exact"
+  },
+  {
+   "gr": "Braiding Sweetgrass",
+   "od": "Braiding Sweetgrass: Indigenous Wisdom, Scientific Knowledge and the Teachings of Plants",
+   "expect": "main-title"
+  },
+  {
+   "gr": "Dune: Deluxe Edition",
+   "od": "Dune: Deluxe Edition",
+   "sub": "Deluxe Edition",
+   "expect": "exact"
+  },
+  {
+   "gr": "Star Wars: Thrawn",
+   "od": "Star Wars",
+   "sub": "Thrawn Alliances",
+   "expect": null
+  },
+  {
+   "gr": "The Overstory",
+   "od": "The End of the Ocean",
+   "expect": null
+  },
+  {
+   "gr": "The Overstory",
+   "od": "The Overstory",
+   "sub": "A Novel",
+   "expect": "exact"
+  },
+  {
+   "gr": "The Overstory: A Novel",
+   "od": "The Overstory",
+   "expect": "exact"
+  },
+  {
+   "gr": "Dune",
+   "od": "Dune",
+   "sub": "50th Anniversary Edition",
+   "expect": "exact"
+  },
+  {
+   "gr": "Emma",
+   "od": "Emma",
+   "sub": "Unabridged",
+   "expect": "exact"
+  },
+  {
+   "gr": "Thrawn",
+   "od": "Thrawn: Treason",
+   "expect": "main-title"
+  },
+  {
+   "gr": "Thrawn: Treason",
+   "od": "Thrawn",
+   "expect": "main-title"
+  },
+  {
+   "gr": "The Left Hand of Darkness",
+   "od": "The Left Hand of Darkness",
+   "sub": "BBC Radio 4 full-cast dramatisation",
+   "expect": "main-title"
+  },
+  {
+   "gr": "Star Wars: Thrawn",
+   "od": "Thrawn",
+   "expect": "tail"
+  },
+  {
+   "gr": "Thrawn",
+   "od": "Star Wars: Thrawn",
+   "expect": "tail"
+  },
+  {
+   "gr": "Star Wars: Thrawn",
+   "od": "Thrawn: Alliances",
+   "expect": null
+  },
+  {
+   "gr": "Star Wars: Thrawn",
+   "od": "Star Wars",
+   "sub": "Thrawn Ascendancy (Book III: Lesser Evil)",
+   "expect": null
+  },
+  {
+   "gr": "Foo: A Novel",
+   "od": "A Novel",
+   "expect": null
+  },
+  {
+   "gr": "Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones",
+   "od": "Atomic Habits",
+   "expect": "exact"
+  },
+  {
+   "gr": "Harry Potter and the Sorcerer's Stone",
+   "od": "Harry Potter and the Sorcerer’s Stone",
+   "expect": "exact"
+  },
+  {
+   "gr": "Piranesi (Hardcover)",
+   "od": "Piranesi",
+   "expect": "exact"
+  },
+  {
+   "gr": "Les Misérables",
+   "od": "Les Miserables",
+   "expect": "exact"
+  },
+  {
+   "gr": "Pride & Prejudice",
+   "od": "Pride and Prejudice",
+   "expect": "exact"
+  },
+  {
+   "gr": "The Colour Purple",
+   "od": "The Color Purple",
+   "expect": "fuzzy"
+  },
+  {
+   "gr": "Wolf Hall",
+   "od": "Bring Up the Bodies",
+   "expect": null
+  },
+  {
+   "gr": "",
+   "od": "Anything",
+   "expect": null
+  }
+ ],
+ "status": [
+  {
+   "name": "3 free but 37 holds (live: SPL Project Hail Mary ebook)",
+   "listing": {
+    "is_available": true,
+    "available_copies": 3,
+    "holds": 37,
+    "owned_copies": 350,
+    "est_wait_days": 2
+   },
+   "status": "wait",
+   "in_collection": true,
+   "reserved": true
+  },
+  {
+   "name": "71 free, 7 holds (live: SPL Fourth Wing audiobook)",
+   "listing": {
+    "is_available": true,
+    "available_copies": 71,
+    "holds": 7,
+    "owned_copies": 79
+   },
+   "status": "available",
+   "in_collection": true,
+   "reserved": false
+  },
+  {
+   "name": "1 free, 1 hold (live: NYPL Tomorrow x3 audiobook)",
+   "listing": {
+    "is_available": true,
+    "available_copies": 1,
+    "holds": 1,
+    "owned_copies": 162
+   },
+   "status": "wait",
+   "in_collection": true,
+   "reserved": true
+  },
+  {
+   "name": "unlimited access, no counts (live: availabilityType always)",
+   "listing": {
+    "is_available": true,
+    "availability_type": "always",
+    "available_copies": null,
+    "owned_copies": null,
+    "holds": 0,
+    "est_wait_days": null
+   },
+   "status": "available",
+   "in_collection": true,
+   "reserved": false
+  },
+  {
+   "name": "counts missing, no holds",
+   "listing": {
+    "is_available": true,
+    "available_copies": null,
+    "owned_copies": null,
+    "holds": 0
+   },
+   "status": "available",
+   "in_collection": true,
+   "reserved": false
+  },
+  {
+   "name": "counts missing, 4 holds",
+   "listing": {
+    "is_available": true,
+    "available_copies": null,
+    "owned_copies": null,
+    "holds": 4
+   },
+   "status": "wait",
+   "in_collection": true,
+   "reserved": true
+  },
+  {
+   "name": "zero-copy stub (live: NYPL Fourth Wing ebook)",
+   "listing": {
+    "is_available": false,
+    "owned_copies": 0,
+    "holds": 0,
+    "est_wait_days": null
+   },
+   "status": "wait",
+   "in_collection": false,
+   "reserved": false
+  },
+  {
+   "name": "not owned",
+   "listing": {
+    "is_owned": false
+   },
+   "status": "wait",
+   "in_collection": false,
+   "reserved": false
+  },
+  {
+   "name": "not holdable",
+   "listing": {
+    "is_available": false,
+    "is_holdable": false
+   },
+   "status": "unavailable",
+   "in_collection": true,
+   "reserved": false
+  },
+  {
+   "name": "normal waitlist",
+   "listing": {
+    "is_available": false,
+    "holds": 67,
+    "owned_copies": 63,
+    "available_copies": 0
+   },
+   "status": "wait",
+   "in_collection": true,
+   "reserved": false
+  }
+ ],
+ "queriesFor": [
+  {
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers",
+    "isbns": [
+     "9780393635539"
+    ]
+   },
+   "expect": [
+    "The Overstory Powers",
+    "The Overstory",
+    "9780393635539"
+   ]
+  },
+  {
+   "book": {
+    "title": "Dune",
+    "author": "",
+    "isbns": []
+   },
+   "expect": [
+    "Dune"
+   ]
+  },
+  {
+   "book": {
+    "title": "Piranesi (Hardcover)",
+    "author": "Susanna Clarke",
+    "isbns": []
+   },
+   "expect": [
+    "Piranesi Clarke",
+    "Piranesi"
+   ]
+  },
+  {
+   "book": {
+    "title": "Braiding Sweetgrass: Indigenous Wisdom",
+    "author": "Robin Wall Kimmerer",
+    "isbns": [
+     "9781571313560",
+     "9781571313561"
+    ]
+   },
+   "expect": [
+    "Braiding Sweetgrass Kimmerer",
+    "Braiding Sweetgrass",
+    "9781571313560",
+    "9781571313561"
+   ]
+  }
+ ],
+ "findOffers": [
+  {
+   "name": "exact match suppresses same-prefix sequels (live Thrawn titles)",
+   "book": {
+    "title": "Thrawn (Star Wars: Thrawn, #1)",
+    "author": "Timothy Zahn"
+   },
+   "catalog": {
+    "Thrawn Zahn": [
+     {
+      "title": "Thrawn: Alliances",
+      "creators": [
+       "Timothy Zahn"
+      ],
+      "is_available": true,
+      "available_copies": 5,
+      "holds": 0
+     },
+     {
+      "title": "Thrawn",
+      "creators": [
+       "Timothy Zahn"
+      ],
+      "holds": 9
+     },
+     {
+      "title": "Thrawn: Treason",
+      "creators": [
+       "Timothy Zahn"
+      ],
+      "is_available": true,
+      "available_copies": 2,
+      "holds": 0
+     }
+    ]
+   },
+   "expect": [
+    [
+     "Thrawn",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "franchise-prefixed Goodreads title still finds the book",
+   "book": {
+    "title": "Star Wars: Thrawn",
+    "author": "Timothy Zahn"
+   },
+   "catalog": {
+    "Star Wars Zahn": [
+     {
+      "title": "Thrawn: Alliances",
+      "creators": [
+       "Timothy Zahn"
+      ]
+     },
+     {
+      "title": "Thrawn",
+      "creators": [
+       "Timothy Zahn"
+      ]
+     },
+     {
+      "title": "Thrawn: Treason",
+      "creators": [
+       "Timothy Zahn"
+      ]
+     }
+    ],
+    "Star Wars": []
+   },
+   "expect": [
+    [
+     "Thrawn",
+     "ebook",
+     "tail"
+    ]
+   ]
+  },
+  {
+   "name": "partial match used only when nothing better exists",
+   "book": {
+    "title": "Thrawn",
+    "author": "Timothy Zahn"
+   },
+   "catalog": {
+    "Thrawn Zahn": [
+     {
+      "title": "Thrawn: Alliances",
+      "creators": [
+       "Timothy Zahn"
+      ]
+     }
+    ]
+   },
+   "expect": [
+    [
+     "Thrawn: Alliances",
+     "ebook",
+     "main-title"
+    ]
+   ]
+  },
+  {
+   "name": "a later query can find a strong match after a weak first query",
+   "book": {
+    "title": "Thrawn",
+    "author": "Timothy Zahn"
+   },
+   "catalog": {
+    "Thrawn Zahn": [
+     {
+      "title": "Thrawn: Alliances",
+      "creators": [
+       "Timothy Zahn"
+      ]
+     }
+    ],
+    "Thrawn": [
+     {
+      "title": "Thrawn",
+      "creators": [
+       "Timothy Zahn"
+      ]
+     }
+    ]
+   },
+   "expect": [
+    [
+     "Thrawn",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "regression: ebook titled 'The Overstory: A Novel' kept beside exact audiobook",
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers"
+   },
+   "catalog": {
+    "The Overstory Powers": [
+     {
+      "media_type": "audiobook"
+     },
+     {
+      "subtitle": "A Novel",
+      "is_available": true,
+      "available_copies": 4,
+      "holds": 0
+     }
+    ]
+   },
+   "expect": [
+    [
+     "The Overstory",
+     "audiobook",
+     "exact"
+    ],
+    [
+     "The Overstory",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "radio dramatisation is dropped when the novel exists (live NYPL record)",
+   "book": {
+    "title": "The Left Hand of Darkness (Hainish Cycle, #4)",
+    "author": "Ursula K. Le Guin"
+   },
+   "catalog": {
+    "The Left Hand of Darkness Guin": [
+     {
+      "title": "The Left Hand of Darkness",
+      "subtitle": "BBC Radio 4 full-cast dramatisation",
+      "creators": [
+       "Ursula K. Le Guin"
+      ],
+      "media_type": "audiobook",
+      "is_available": true,
+      "available_copies": 7,
+      "owned_copies": 14,
+      "holds": 0
+     },
+     {
+      "title": "The Left Hand of Darkness",
+      "creators": [
+       "Ursula K. Le Guin"
+      ],
+      "holds": 48,
+      "owned_copies": 12
+     }
+    ]
+   },
+   "expect": [
+    [
+     "The Left Hand of Darkness",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "radio dramatisation still offered, labelled, if it is all there is",
+   "book": {
+    "title": "The Left Hand of Darkness (Hainish Cycle, #4)",
+    "author": "Ursula K. Le Guin"
+   },
+   "catalog": {
+    "The Left Hand of Darkness Guin": [
+     {
+      "title": "The Left Hand of Darkness",
+      "subtitle": "BBC Radio 4 full-cast dramatisation",
+      "creators": [
+       "Ursula K. Le Guin"
+      ],
+      "media_type": "audiobook",
+      "is_available": true,
+      "available_copies": 7,
+      "owned_copies": 14,
+      "holds": 0
+     }
+    ]
+   },
+   "expect": [
+    [
+     "The Left Hand of Darkness",
+     "audiobook",
+     "main-title"
+    ]
+   ]
+  },
+  {
+   "name": "zero-copy stub record is ignored (live NYPL Fourth Wing)",
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers"
+   },
+   "catalog": {
+    "The Overstory Powers": [
+     {
+      "owned_copies": 0,
+      "est_wait_days": null,
+      "holds": 0
+     },
+     {
+      "owned_copies": 71,
+      "holds": 268,
+      "est_wait_days": 54
+     }
+    ]
+   },
+   "expect": [
+    [
+     "The Overstory",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "type, language and ownership filters",
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers"
+   },
+   "catalog": {
+    "The Overstory Powers": [
+     {
+      "media_type": "audiobook"
+     },
+     {
+      "languages": [
+       "es"
+      ]
+     },
+     {
+      "is_owned": false
+     },
+     {}
+    ]
+   },
+   "types": [
+    "ebook"
+   ],
+   "languages": [
+    "en"
+   ],
+   "expect": [
+    [
+     "The Overstory",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "empty type/language filters mean anything (unowned still excluded)",
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers"
+   },
+   "catalog": {
+    "The Overstory Powers": [
+     {
+      "media_type": "audiobook"
+     },
+     {
+      "languages": [
+       "es"
+      ]
+     },
+     {
+      "is_owned": false
+     },
+     {}
+    ]
+   },
+   "types": [],
+   "languages": [],
+   "expect": [
+    [
+     "The Overstory",
+     "audiobook",
+     "exact"
+    ],
+    [
+     "The Overstory",
+     "ebook",
+     "exact"
+    ],
+    [
+     "The Overstory",
+     "ebook",
+     "exact"
+    ]
+   ]
+  },
+  {
+   "name": "lookalikes only: not found",
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers"
+   },
+   "catalog": {
+    "The Overstory Powers": [
+     {
+      "title": "The Gold Bug Variations"
+     }
+    ]
+   },
+   "expect": []
+  },
+  {
+   "name": "ISBN fallback finds an edition that title search missed",
+   "book": {
+    "title": "The Overstory",
+    "author": "Richard Powers",
+    "isbns": [
+     "9780393635539"
+    ]
+   },
+   "catalog": {
+    "9780393635539": [
+     {
+      "isbns": [
+       "9780393635539"
+      ]
+     }
+    ]
+   },
+   "expect": [
+    [
+     "The Overstory",
+     "ebook",
+     "isbn"
+    ]
+   ]
+  }
+ ],
+ "bestOffer": [
+  {
+   "name": "shortest wait wins among waitlists",
+   "prefer": [
+    "ebook",
+    "audiobook"
+   ],
+   "offers": [
+    {
+     "library": "a",
+     "est_wait_days": 5
+    },
+    {
+     "library": "b",
+     "est_wait_days": 60
+    }
+   ],
+   "expect": 0
+  },
+  {
+   "name": "available beats a short wait",
+   "prefer": [
+    "ebook",
+    "audiobook"
+   ],
+   "offers": [
+    {
+     "library": "a",
+     "est_wait_days": 5
+    },
+    {
+     "library": "c",
+     "media_type": "audiobook",
+     "is_available": true,
+     "available_copies": 1,
+     "holds": 0,
+     "est_wait_days": 14
+    }
+   ],
+   "expect": 1
+  },
+  {
+   "name": "format preference breaks ties between available",
+   "prefer": [
+    "ebook",
+    "audiobook"
+   ],
+   "offers": [
+    {
+     "library": "c",
+     "media_type": "audiobook",
+     "is_available": true,
+     "available_copies": 1,
+     "holds": 0
+    },
+    {
+     "library": "d",
+     "is_available": true,
+     "available_copies": 1,
+     "holds": 0
+    }
+   ],
+   "expect": 1
+  },
+  {
+   "name": "preference order can be flipped",
+   "prefer": [
+    "audiobook",
+    "ebook"
+   ],
+   "offers": [
+    {
+     "library": "c",
+     "media_type": "audiobook",
+     "is_available": true,
+     "available_copies": 1,
+     "holds": 0
+    },
+    {
+     "library": "d",
+     "is_available": true,
+     "available_copies": 1,
+     "holds": 0
+    }
+   ],
+   "expect": 0
+  },
+  {
+   "name": "unknown wait sorts last",
+   "prefer": [
+    "ebook"
+   ],
+   "offers": [
+    {
+     "library": "b",
+     "est_wait_days": null
+    },
+    {
+     "library": "a",
+     "est_wait_days": 90
+    }
+   ],
+   "expect": 1
+  }
+ ],
+ "report": {
+  "prefer": [
+   "ebook",
+   "audiobook"
+  ],
+  "results": [
+   {
+    "book": {
+     "title": "Avail",
+     "author": "A Writer",
+     "gr_id": "11",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [
+     {
+      "listing": {
+       "library": "kcls",
+       "media_id": "101",
+       "is_available": true,
+       "available_copies": 8,
+       "holds": 0,
+       "owned_copies": 17,
+       "est_wait_days": 14
+      },
+      "match": "exact"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "book": {
+     "title": "Waiting",
+     "author": "B Writer",
+     "gr_id": "12",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [
+     {
+      "listing": {
+       "library": "nypl",
+       "media_id": "102",
+       "media_type": "audiobook",
+       "holds": 67,
+       "owned_copies": 63,
+       "est_wait_days": 16
+      },
+      "match": "main-title"
+     },
+     {
+      "listing": {
+       "library": "spl",
+       "media_id": "103",
+       "holds": 90,
+       "owned_copies": 12,
+       "est_wait_days": 40
+      },
+      "match": "exact"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "book": {
+     "title": "Project Hail Mary",
+     "author": "Andy Weir",
+     "gr_id": "13",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [
+     {
+      "listing": {
+       "library": "spl",
+       "media_id": "104",
+       "is_available": true,
+       "available_copies": 3,
+       "holds": 37,
+       "owned_copies": 350,
+       "est_wait_days": 2
+      },
+      "match": "exact"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "book": {
+     "title": "Tom Swift",
+     "author": "Victor Appleton",
+     "gr_id": "",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [
+     {
+      "listing": {
+       "library": "spl",
+       "media_id": "105",
+       "is_available": true,
+       "availability_type": "always",
+       "available_copies": null,
+       "owned_copies": null,
+       "holds": 0,
+       "est_wait_days": null
+      },
+      "match": "tail"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "book": {
+     "title": "Nowhere",
+     "author": "C Writer",
+     "gr_id": "14",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [],
+    "errors": []
+   },
+   {
+    "book": {
+     "title": "Flaky",
+     "author": "D Writer",
+     "gr_id": "15",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [],
+    "errors": [
+     "kcls: HTTP 500 for /libraries/kcls/media (gave up after 5 attempts)"
+    ]
+   },
+   {
+    "book": {
+     "title": "Partly Flaky",
+     "author": "E Writer",
+     "gr_id": "16",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [
+     {
+      "listing": {
+       "library": "nypl",
+       "media_id": "106",
+       "holds": 5,
+       "owned_copies": 9,
+       "est_wait_days": 7,
+       "pre_release": true,
+       "lucky_day_available": 2
+      },
+      "match": "fuzzy"
+     }
+    ],
+    "errors": [
+     "spl: timeout"
+    ]
+   },
+   {
+    "book": {
+     "title": "Has\ttab \"quotes\"\nand newline",
+     "author": "F, Writer",
+     "gr_id": "17",
+     "isbns": [],
+     "additional_authors": []
+    },
+    "offers": [
+     {
+      "listing": {
+       "library": "kcls",
+       "media_id": "107",
+       "is_available": true,
+       "available_copies": 2,
+       "holds": 0,
+       "owned_copies": 2
+      },
+      "match": "isbn"
+     }
+    ],
+    "errors": []
+   }
+  ],
+  "summary_status_tsv": "Title\tAuthor\tStatus\tLibrary\tFormat\tEst. wait (days)\tHolds\tCopies available\tCopies owned\tMatch\tNotes\tLibrary link\tGoodreads link\nAvail\tA Writer\tAvailable now\tkcls\tebook\t\t0\t8\t17\ttitle+author\t\thttps://kcls.overdrive.com/media/101\thttps://www.goodreads.com/book/show/11\nTom Swift\tVictor Appleton\tAvailable now\tspl\tebook\t\t0\t\t\ttitle+author (franchise prefix)\tunlimited access\thttps://spl.overdrive.com/media/105\t\n\"Has tab \"\"quotes\"\" and newline\"\tF, Writer\tAvailable now\tkcls\tebook\t\t0\t2\t2\tisbn\t\thttps://kcls.overdrive.com/media/107\thttps://www.goodreads.com/book/show/17\nProject Hail Mary\tAndy Weir\tWait list\tspl\tebook\t2\t37\t3\t350\ttitle+author\t3 free copies but 37 holds: likely reserved for the queue\thttps://spl.overdrive.com/media/104\thttps://www.goodreads.com/book/show/13\nPartly Flaky\tE Writer\tWait list\tnypl\tebook\t7\t5\t0\t9\ttitle+author (fuzzy)\tpre-release; Lucky Day copies available: 2; lookup failed: spl: timeout\thttps://nypl.overdrive.com/media/106\thttps://www.goodreads.com/book/show/16\nWaiting\tB Writer\tWait list\tnypl\taudiobook\t16\t67\t0\t63\ttitle+author (subtitle differs)\t\thttps://nypl.overdrive.com/media/102\thttps://www.goodreads.com/book/show/12\nFlaky\tD Writer\tLookup failed\t\t\t\t\t\t\t\tlookup failed: kcls: HTTP 500 for /libraries/kcls/media (gave up after 5 attempts)\t\thttps://www.goodreads.com/book/show/15\nNowhere\tC Writer\tNot found\t\t\t\t\t\t\t\t\t\thttps://www.goodreads.com/book/show/14\n",
+  "summary_title_csv": "Title,Author,Status,Library,Format,Est. wait (days),Holds,Copies available,Copies owned,Match,Notes,Library link,Goodreads link\nAvail,A Writer,Available now,kcls,ebook,,0,8,17,title+author,,https://kcls.overdrive.com/media/101,https://www.goodreads.com/book/show/11\nFlaky,D Writer,Lookup failed,,,,,,,,lookup failed: kcls: HTTP 500 for /libraries/kcls/media (gave up after 5 attempts),,https://www.goodreads.com/book/show/15\n\"Has tab \"\"quotes\"\" and newline\",\"F, Writer\",Available now,kcls,ebook,,0,2,2,isbn,,https://kcls.overdrive.com/media/107,https://www.goodreads.com/book/show/17\nNowhere,C Writer,Not found,,,,,,,,,,https://www.goodreads.com/book/show/14\nPartly Flaky,E Writer,Wait list,nypl,ebook,7,5,0,9,title+author (fuzzy),pre-release; Lucky Day copies available: 2; lookup failed: spl: timeout,https://nypl.overdrive.com/media/106,https://www.goodreads.com/book/show/16\nProject Hail Mary,Andy Weir,Wait list,spl,ebook,2,37,3,350,title+author,3 free copies but 37 holds: likely reserved for the queue,https://spl.overdrive.com/media/104,https://www.goodreads.com/book/show/13\nTom Swift,Victor Appleton,Available now,spl,ebook,,0,,,title+author (franchise prefix),unlimited access,https://spl.overdrive.com/media/105,\nWaiting,B Writer,Wait list,nypl,audiobook,16,67,0,63,title+author (subtitle differs),,https://nypl.overdrive.com/media/102,https://www.goodreads.com/book/show/12\n",
+  "detail_tsv": "Title\tAuthor\tLibrary\tFormat\tStatus\tEst. wait (days)\tHolds\tCopies available\tCopies owned\tLucky Day copies available\tMatch\tCatalog title\tLibrary link\nAvail\tA Writer\tkcls\tebook\tAvailable now\t\t0\t8\t17\t0\ttitle+author\tThe Overstory\thttps://kcls.overdrive.com/media/101\nWaiting\tB Writer\tnypl\taudiobook\tWait list\t16\t67\t0\t63\t0\ttitle+author (subtitle differs)\tThe Overstory\thttps://nypl.overdrive.com/media/102\nWaiting\tB Writer\tspl\tebook\tWait list\t40\t90\t0\t12\t0\ttitle+author\tThe Overstory\thttps://spl.overdrive.com/media/103\nProject Hail Mary\tAndy Weir\tspl\tebook\tWait list\t2\t37\t3\t350\t0\ttitle+author\tThe Overstory\thttps://spl.overdrive.com/media/104\nTom Swift\tVictor Appleton\tspl\tebook\tAvailable now\t\t0\t\t\t0\ttitle+author (franchise prefix)\tThe Overstory\thttps://spl.overdrive.com/media/105\nPartly Flaky\tE Writer\tnypl\tebook\tWait list\t7\t5\t0\t9\t2\ttitle+author (fuzzy)\tThe Overstory\thttps://nypl.overdrive.com/media/106\n\"Has tab \"\"quotes\"\" and newline\"\tF, Writer\tkcls\tebook\tAvailable now\t\t0\t2\t2\t0\tisbn\tThe Overstory\thttps://kcls.overdrive.com/media/107\n"
+ }
+}

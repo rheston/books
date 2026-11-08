@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="libbycheck">
+<title>libbycheck</title>
+<link rel="icon" href="data:,">
+<style>
+/* Layout: one column, reads like a checklist: books, libraries, run, results. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1d2421;
+  --muted: #5b6760;
+  --line: #d9ded9;
+  --accent: #0f6b62;
+  --accent-fg: #ffffff;
+  --ok: #17703a;   --ok-bg: #e2f3e8;
+  --warn: #8a5a00; --warn-bg: #fbefd0;
+  --none: #4d5752; --none-bg: #e8ebe8;
+  --bad: #a3261f;  --bad-bg: #fbe3e1;
+  --radius: 10px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131815; --surface: #1b221e; --fg: #e6ece8; --muted: #9aa8a0; --line: #2f3a34;
+    --accent: #4cc2b4; --accent-fg: #06201c;
+    --ok: #6fd596; --ok-bg: #173824; --warn: #f0c35a; --warn-bg: #3b2f10;
+    --none: #b3beb8; --none-bg: #28312c; --bad: #ff9a92; --bad-bg: #44201d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131815; --surface: #1b221e; --fg: #e6ece8; --muted: #9aa8a0; --line: #2f3a34;
+  --accent: #4cc2b4; --accent-fg: #06201c;
+  --ok: #6fd596; --ok-bg: #173824; --warn: #f0c35a; --warn-bg: #3b2f10;
+  --none: #b3beb8; --none-bg: #28312c; --bad: #ff9a92; --bad-bg: #44201d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 var(--font);
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 1.05rem; margin: 0 0 4px; }
+p { margin: 0; }
+.lede, .hint, .small { color: var(--muted); }
+.small { font-size: 0.875rem; }
+section.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+label { font-weight: 600; font-size: 0.9rem; }
+input[type="text"], input[type="search"], textarea, select {
+  width: 100%; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+textarea { min-height: 96px; resize: vertical; }
+input[type="file"] { width: 100%; font: inherit; color: var(--fg); }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 10px 14px; min-height: 44px; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+button.link { border: 0; background: none; color: var(--accent); padding: 4px 0; min-height: 0; text-decoration: underline; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row > * { min-width: 0; }
+.stack { display: flex; flex-direction: column; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 0.9rem; }
+.chip button { min-height: 28px; padding: 0 8px; border-radius: 999px; }
+.picklist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.picklist li + li { border-top: 1px solid var(--line); }
+.picklist button { width: 100%; text-align: left; border: 0; border-radius: 0; background: var(--surface); }
+.picklist .key { color: var(--muted); font-size: 0.85rem; }
+.msg { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; }
+.msg.error { background: var(--bad-bg); color: var(--bad); }
+.msg.info { background: var(--none-bg); color: var(--fg); }
+details > summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; padding-block: 8px; } /* keep the native disclosure arrow: it is the only hint these expand */
+.opts { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.opts label { font-weight: 400; display: flex; gap: 8px; align-items: center; }
+progress { width: 100%; height: 12px; accent-color: var(--accent); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { border-radius: 999px; min-height: 40px; }
+.filters button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+ol.books { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+li.book { background: var(--surface); border: 1px solid var(--line); border-left-width: 5px; border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+li.book[data-state="available"] { border-left-color: var(--ok); }
+li.book[data-state="wait"], li.book[data-state="unavailable"] { border-left-color: var(--warn); }
+li.book[data-state="none"] { border-left-color: var(--none); }
+li.book[data-state="error"] { border-left-color: var(--bad); }
+.book-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: flex-start; }
+.book-title { font-weight: 650; overflow-wrap: anywhere; }
+.book-author { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.pill { font-size: 0.8rem; font-weight: 650; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.pill[data-state="available"] { background: var(--ok-bg); color: var(--ok); }
+.pill[data-state="wait"], .pill[data-state="unavailable"] { background: var(--warn-bg); color: var(--warn); }
+.pill[data-state="none"] { background: var(--none-bg); color: var(--none); }
+.pill[data-state="error"] { background: var(--bad-bg); color: var(--bad); }
+.meta { font-size: 0.92rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.note { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.9rem; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 0.85rem; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; }
+footer { color: var(--muted); font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: no-preference) { progress { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="stack">
+    <h1>libbycheck</h1>
+    <p class="lede">See which books on your Goodreads to-read shelf you can borrow right now from your Libby libraries.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-books">
+    <div>
+      <h2 id="h-books">1. Your books</h2>
+      <p class="hint small">Export from Goodreads: My Books, then Import and export, then Export Library. Open the downloaded CSV here.</p>
+    </div>
+    <div class="stack">
+      <label for="csv-file">Goodreads export (CSV)</label>
+      <input id="csv-file" type="file" accept=".csv,text/csv">
+    </div>
+    <details>
+      <summary>Or paste a list</summary>
+      <div class="stack" style="padding-top:8px">
+        <label for="paste-list">One book per line: Title by Author</label>
+        <textarea id="paste-list" placeholder="Piranesi by Susanna Clarke&#10;The Overstory by Richard Powers" autocapitalize="off" spellcheck="false"></textarea>
+        <div class="row"><button id="use-paste" type="button">Use this list</button></div>
+      </div>
+    </details>
+    <div id="books-msg" role="status" hidden></div>
+    <div id="books-summary" class="stack" hidden></div>
+    <div class="row"><button id="use-example" type="button" class="link">Try it with 6 example books</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-libs">
+    <div>
+      <h2 id="h-libs">2. Your libraries</h2>
+      <p class="hint small">Add each library whose card you have in Libby.</p>
+    </div>
+    <ul id="lib-chips" class="chips" aria-label="Chosen libraries"></ul>
+    <div class="stack">
+      <label for="lib-search">Search by library name</label>
+      <input id="lib-search" type="search" placeholder="e.g. king county" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <ul id="lib-results" class="picklist" hidden></ul>
+    </div>
+    <details>
+      <summary>Add by library key</summary>
+      <div class="stack" style="padding-top:8px">
+        <label for="lib-key">Key (the first part of your library's OverDrive address, e.g. nypl for nypl.overdrive.com)</label>
+        <div class="row">
+          <input id="lib-key" type="text" style="flex:1 1 12rem" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button id="lib-key-add" type="button">Add</button>
+        </div>
+      </div>
+    </details>
+    <div id="libs-msg" role="status" hidden></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-run">
+    <h2 id="h-run">3. Check availability</h2>
+    <details>
+      <summary>Options</summary>
+      <div class="opts">
+        <label><input id="opt-ebook" type="checkbox" checked> Ebooks</label>
+        <label><input id="opt-audiobook" type="checkbox" checked> Audiobooks</label>
+        <label><input id="opt-english" type="checkbox" checked> English-language editions only</label>
+        <div class="stack">
+          <label for="opt-shelf">Goodreads shelf to read from the CSV</label>
+          <input id="opt-shelf" type="text" value="to-read" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <span class="small hint">Applies the next time you open a CSV.</span>
+        </div>
+      </div>
+    </details>
+    <div class="row">
+      <button id="run" type="button" class="primary" disabled>Check availability</button>
+      <button id="cancel" type="button" hidden>Cancel</button>
+    </div>
+    <p id="run-hint" class="small hint"></p>
+    <progress id="progress" value="0" max="1" hidden></progress>
+    <p id="progress-text" class="small hint" role="status" hidden></p>
+  </section>
+
+  <section id="results" class="stack" aria-labelledby="h-results" hidden>
+    <h2 id="h-results">Results</h2>
+    <div id="filters" class="filters" role="group" aria-label="Filter results"></div>
+    <div class="row">
+      <label for="sort" class="small">Sort</label>
+      <select id="sort" style="width:auto">
+        <option value="status">Best first</option>
+        <option value="title">Title A to Z</option>
+      </select>
+      <button id="copy" type="button">Copy for Google Sheets</button>
+      <button id="download" type="button">Download CSV</button>
+    </div>
+    <div id="results-msg" role="status" hidden></div>
+    <ol id="book-list" class="books"></ol>
+  </section>
+
+  <footer>
+    <p>Your book list and library choices stay in this browser. Searches go straight from your device to OverDrive's public catalog service. Nothing is sent to a server run by this page.</p>
+    <p>Uses an unofficial OverDrive service, so it can break without notice. "Available now" means free copies outnumber holds. Check the Libby app before relying on it.</p>
+  </footer>
+</main>
+
+<script type="application/json" id="library-directory">/*__DIRECTORY__*/</script>
+<script>/*__CORE__*/</script>
+<script>/*__APP__*/</script>
+</body>
+</html>
