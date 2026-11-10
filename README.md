@@ -40,7 +40,7 @@ To use it on a computer without hosting, just open `docs/index.html` in a browse
 
 1. **Your books.** Export from Goodreads (My Books, then Import and export, then Export Library) and open the CSV in the page. Or paste lines like `Piranesi by Susanna Clarke`. The page remembers them, so next time you only press Check.
 2. **Your libraries.** Search by name and tap to add each library whose card you have in Libby. (It can also add by key.)
-3. **Check availability.** Results show Available now, Wait list and Not found, with a filter, a sort, per-library detail, and **Copy for Google Sheets** (paste into cell A1) or **Download CSV**.
+3. **Check availability.** Results show Available now, Wait list and Not found, with a filter, a sort, per-library detail, and **Copy for Google Sheets** (paste into cell A1) or **Download CSV**. When the check finishes, the page scrolls to the results and says what it found. The last results are saved in your browser with the time they were checked, so they are still there if the page reloads. Changing your books or libraries clears them.
 
 The web app does not read a Goodreads RSS feed. I could not test whether Goodreads lets a web page read its feed, and the usual workaround (a third-party proxy) would expose your private RSS key. The command-line tool still supports RSS.
 

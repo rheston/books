@@ -39,7 +39,7 @@
     books: store.get("libbycheck.books", []),
     booksSource: store.get("libbycheck.booksSource", ""),
     libraries: store.get("libbycheck.libraries", []), // [{key, name}]
-    results: null, filter: "all", sort: "status", running: false, cancelled: false,
+    results: null, checkedAt: null, filter: "all", sort: "status", running: false, cancelled: false,
   };
 
   function message(el, kind, text) {
@@ -53,11 +53,33 @@
     return l ? l.name : key;
   }
 
+  // ---- last results survive a reload (phone browsers often reload a tab when you switch apps and back)
+  const RESULTS_KEY = "libbycheck.lastRun";
+  function validResults(list) {
+    return Array.isArray(list) && list.every((r) => r && r.book && typeof r.book.title === "string" && Array.isArray(r.errors) &&
+      Array.isArray(r.offers) && r.offers.every((o) => o && typeof o.match === "string" && o.listing && typeof o.listing.library === "string" &&
+        typeof o.listing.media_id === "string" && Array.isArray(o.listing.creators)));
+  }
+  function setResults(results) {
+    state.results = results;
+    state.checkedAt = Date.now();
+    store.set(RESULTS_KEY, { v: 1, at: state.checkedAt, results });
+  }
+  function clearResults() {
+    state.results = null;
+    state.checkedAt = null;
+    store.set(RESULTS_KEY, null);
+  }
+  (function restoreResults() {
+    const saved = store.get(RESULTS_KEY, null);
+    if (saved && saved.v === 1 && validResults(saved.results)) { state.results = saved.results; state.checkedAt = saved.at; }
+  })();
+
   // ---- 1. books
   function setBooks(books, source) {
     state.books = books;
     state.booksSource = source;
-    state.results = null;
+    clearResults();
     store.set("libbycheck.books", books);
     store.set("libbycheck.booksSource", source);
     renderBooks();
@@ -122,7 +144,7 @@
   function addLibrary(key, name) {
     if (state.libraries.some((l) => l.key === key)) return;
     state.libraries.push({ key, name });
-    state.results = null;
+    clearResults();
     saveLibraries();
     renderResults();
   }
@@ -132,7 +154,7 @@
     chips.replaceChildren(...state.libraries.map((l) =>
       h("li", { class: "chip" }, l.name, h("button", {
         type: "button", "aria-label": `Remove ${l.name}`, text: "×",
-        onclick: () => { state.libraries = state.libraries.filter((x) => x.key !== l.key); state.results = null; saveLibraries(); renderResults(); },
+        onclick: () => { state.libraries = state.libraries.filter((x) => x.key !== l.key); clearResults(); saveLibraries(); renderResults(); },
       }))));
     chips.hidden = !state.libraries.length;
   }
@@ -185,12 +207,15 @@
   $("cancel").addEventListener("click", () => { state.cancelled = true; $("cancel").disabled = true; });
 
   $("run").addEventListener("click", async () => {
+    // Keep the earlier results aside: a cancelled or failed run should not throw them away.
+    const previous = { results: state.results, checkedAt: state.checkedAt };
     state.running = true; state.cancelled = false; state.results = null;
     $("cancel").hidden = false; $("cancel").disabled = false;
     $("progress").hidden = false; $("progress-text").hidden = false;
     renderResults(); updateRunButton();
     const client = C.createClient({ storage: webStorage() });
     client.prune();
+    let finished = false;
     try {
       const results = await C.checkBooks(state.books, state.libraries.map((l) => l.key), client, {
         types: chosenTypes(), languages: $("opt-english").checked ? ["en"] : [], workers: 4,
@@ -200,17 +225,39 @@
           $("progress-text").textContent = `Checked ${done} of ${total} lookups`;
         },
       });
-      // A cancelled run would show unchecked books as "Not found", which is false, so drop it.
-      state.results = state.cancelled ? null : results;
-      $("progress-text").textContent = state.cancelled ? "Cancelled. Nothing to show." : "Done.";
+      if (state.cancelled) {
+        // Unchecked books would show as "Not found", which is false, so the partial run is dropped.
+        state.results = previous.results; state.checkedAt = previous.checkedAt;
+        $("progress-text").textContent = previous.results ? "Cancelled. Your earlier results are shown again." : "Cancelled. Nothing to show.";
+      } else {
+        setResults(results);
+        $("progress-text").textContent = summaryText(results);
+        finished = true;
+      }
     } catch (err) {
+      state.results = previous.results; state.checkedAt = previous.checkedAt;
       $("progress-text").textContent = "Something went wrong: " + err.message;
     } finally {
       state.running = false;
       $("cancel").hidden = true; $("progress").hidden = true;
       renderResults(); updateRunButton();
+      if (finished) scrollToResults();
     }
   });
+
+  function summaryText(results) {
+    const count = { available: 0, wait: 0, none: 0, error: 0 };
+    for (const row of C.summaryRows(results, ["ebook", "audiobook"], "status")) count[row.state === "unavailable" ? "wait" : row.state] += 1;
+    const parts = [`${count.available} available now`, `${count.wait} on wait lists`, `${count.none} not found`];
+    if (count.error) parts.push(`${count.error} lookup failed`);
+    return `Done. ${parts.join(", ")}. Results are below.`;
+  }
+
+  // The results sit below the button, off-screen on a phone, so bring them into view.
+  function scrollToResults() {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    $("results").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }
 
   // ---- results
   const FILTERS = [
@@ -280,6 +327,9 @@
     const box = $("results");
     box.hidden = !state.results;
     if (!state.results) return;
+    $("results-when").textContent = state.checkedAt
+      ? `Checked ${new Date(state.checkedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}. Availability changes through the day, so run it again for fresh numbers.`
+      : "";
     const { all, shown } = currentRows();
     $("filters").replaceChildren(...FILTERS.map(([id, label, test]) => {
       const n = all.filter(test).length;
@@ -324,6 +374,7 @@
   // ---- boot
   renderBooks();
   renderLibraries();
+  renderResults();
   updateRunButton();
   // Test/automation hook: lets a script read the rendered state without scraping.
   window.__libbycheck = state;
