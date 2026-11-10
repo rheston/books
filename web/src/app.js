@@ -213,8 +213,7 @@
     $("cancel").hidden = false; $("cancel").disabled = false;
     $("progress").hidden = false; $("progress-text").hidden = false;
     renderResults(); updateRunButton();
-    const client = C.createClient({ storage: webStorage() });
-    client.prune();
+    const client = C.createClient(); // no cache: every check asks the libraries again, so the numbers are fresh
     let finished = false;
     try {
       const results = await C.checkBooks(state.books, state.libraries.map((l) => l.key), client, {
@@ -372,6 +371,8 @@
   });
 
   // ---- boot
+  // Earlier versions cached lookups for 30 minutes. Checks now always fetch fresh numbers, so clear any leftovers.
+  try { const ls = webStorage(); Object.keys(ls).filter((k) => k.startsWith("lbc:")).forEach((k) => ls.removeItem(k)); } catch (e) { /* ignore */ }
   renderBooks();
   renderLibraries();
   renderResults();
